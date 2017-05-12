@@ -11,7 +11,8 @@ find_package(Threads REQUIRED)
 enable_testing()
 
 file(GLOB TEST_SRC_FILES test/*.cpp)
-add_executable(${PROJECT_NAME}Test ${TEST_SRC_FILES})
+file(GLOB SRC_FILES src/*.cpp)
+add_executable(${PROJECT_NAME}Test ${TEST_SRC_FILES} ${SRC_FILES})
 
 target_compile_features(${PROJECT_NAME}Test PRIVATE cxx_range_for)
 target_link_libraries(${PROJECT_NAME}Test

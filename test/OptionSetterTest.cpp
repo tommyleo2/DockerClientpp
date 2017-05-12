@@ -17,12 +17,12 @@ TEST(OptionSetter, setTest) {
             {"WorkingDir", "/tmp"},
               {"Image", "sandbox10:libsanbox"}
   };
-  op.set(DockerClientpp::AttachStdout(true));
-  op.set(DockerClientpp::AttachStderr(true));
-  op.set(DockerClientpp::Tty(true));
-  op.set(DockerClientpp::Cmd({"ls", "-l"}));
-  op.set(DockerClientpp::WorkingDir("/tmp"));
-  op.set(DockerClientpp::Image("sandbox10:libsanbox"));
+  op.set(DockerClientpp::CreateContainer::AttachStdout(true));
+  op.set(DockerClientpp::CreateContainer::AttachStderr(true));
+  op.set(DockerClientpp::CreateContainer::Tty(true));
+  op.set(DockerClientpp::CreateContainer::Cmd({"ls", "-l"}));
+  op.set(DockerClientpp::CreateContainer::WorkingDir("/tmp"));
+  op.set(DockerClientpp::CreateContainer::Image("sandbox10:libsanbox"));
   json test = json::parse(op.dump());
 
   ASSERT_EQ(expect.size(), test.size());

@@ -5,59 +5,63 @@
 
 namespace DockerClientpp {
   using std::string;
-  class CreateContainerOption : virtual Option { };
+  template<typename T>
+  class CreateContainerOption : public DataOption<T> {
+  public:
+    CreateContainerOption(const T &data) : DataOption<T>(data) { }
+  };
 
   namespace CreateContainer {
 
     //  TODO:
-    //class AttachStdin : public BoolOption {};
+    //class AttachStdin : public CreateContainerOption {};
     //class Volumes
 
-    class AttachStdout : virtual CreateContainerOption, virtual public BoolOption {
+    class AttachStdout : public CreateContainerOption<bool> {
     public:
-      AttachStdout(bool data) : BoolOption(data) { }
+      AttachStdout(bool data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "AttachStdout";
       }
     };
-    class AttachStderr : virtual CreateContainerOption, virtual public BoolOption {
+    class AttachStderr : public CreateContainerOption<bool> {
     public:
-      AttachStderr(bool data) : BoolOption(data) { }
+      AttachStderr(bool data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "AttachStderr";
       }
     };
-    class Tty : virtual CreateContainerOption, public BoolOption {
+    class Tty : public CreateContainerOption<bool> {
     public:
-      Tty(bool data) : BoolOption(data) { }
+      Tty(bool data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "Tty";
       }
     };
-    class Cmd : virtual CreateContainerOption, public StringArrayOption {
+    class Cmd : public CreateContainerOption<std::vector<string>> {
     public:
-      Cmd(const std::vector<string> &data) : StringArrayOption(data) { }
+      Cmd(const std::vector<string> &data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "Cmd";
       }
     };
-    class WorkingDir : virtual CreateContainerOption, public StringOption {
+    class WorkingDir : public CreateContainerOption<string> {
     public:
-      WorkingDir(const string &data) : StringOption(data) { }
+      WorkingDir(const string &data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "WorkingDir";
       }
     };
-    class Image : virtual CreateContainerOption, public StringOption {
+    class Image : virtual public CreateContainerOption<string> {
     public:
-      Image(const string &data) : StringOption(data) { }
+      Image(const string &data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "Image";
       }
     };
-    class Name : virtual CreateContainerOption, public StringOption {
+    class Name : virtual public CreateContainerOption<string> {
     public:
-      Name(const string &data) : StringOption(data) { }
+      Name(const string &data) : CreateContainerOption(data) { }
       virtual string getName() {
         return "name";
       }

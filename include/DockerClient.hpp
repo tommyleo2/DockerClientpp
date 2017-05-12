@@ -4,20 +4,16 @@
 #include <iostream>
 #include <vector>
 #include <type_traits>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <stddef.h>
 
 #include "CreateContainerOptions.hpp"
 #include "OptionSetter.hpp"
+#include "SimpleHttpClient.hpp"
+#include "Utility.hpp"
+#include "Response.hpp"
+#include "Exceptions.hpp"
+
 #include "types.hpp"
 #include "defines.hpp"
-#include "SimpleHttpClient.hpp"
 
 namespace DockerClientpp {
   using std::string;
@@ -43,8 +39,17 @@ namespace DockerClientpp {
      *  @param path path to the docker daemon socket
      *         if type is TCP, path might be a IP to docker daemon server
      */
-    DockerClient(SOCK_TYPE type = UNIX,
+    DockerClient(const SOCK_TYPE type = UNIX,
                  const string &path = "/var/run/docker.sock");
+
+    /**
+     *  @brief Set Docker daemon API version
+     *
+     *  The default api version is v1.24
+     *
+     *  @param api api version to be set. e.g. api = "v1.24"
+     */
+    void setAPIVersion(const string &api);
 
     /**
      *  @brief Create a new container based on existing image
@@ -58,10 +63,10 @@ namespace DockerClientpp {
      *  @sa CreateContainerOption
      */
     template<typename... Ts>
-    void createContainer(Ts &&...ts) {
+    string createContainer(Ts &&...ts) {
       OptionSetter option;
-      setOpt(option, FWD(ts)...);
-      m_impl->createContainer(option);
+      setOpt<CreateContainerOption>(option, FWD(ts)...);
+      return m_impl->createContainer(option);
     }
 
     /**
@@ -88,12 +93,19 @@ namespace DockerClientpp {
     // string startExecution();
 
   private:
-    template<typename T, typename... Ts>
-    void setOpt(OptionSetter &option, T &&t, Ts &&...ts) {
-      static_assert(std::is_base_of<CreateContainerOption, T>::value,
-                    "Option is not CreateContainerOption");
+    template< template <typename...> class Type, typename T, typename... Ts>
+    void setOpt(OptionSetter &option, T &&t, Ts &&... ts) {
+      static_assert(is_base_of_template<Type, T>::value,
+                    "This operator does not contain such option");
       option.set(FWD(t));
-      setOpt(option, FWD(ts)...);
+      setOpt<Type>(option, FWD(ts)...);
+    }
+
+    template< template <typename...> class Type, typename T>
+    void setOpt(OptionSetter &option, T &&t) {
+      static_assert(is_base_of_template<Type, T>::value,
+                    "This operator does not contain such option");
+      option.set(FWD(t));
     }
 
   private:

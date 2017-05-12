@@ -5,73 +5,70 @@ using std::string;
 namespace DockerClientpp {
   class DockerClientImpl : public DockerClientImplBase {
   public:
-    DockerClientImpl(SOCK_TYPE type,
+    DockerClientImpl(const SOCK_TYPE type,
                      const string &path);
-    virtual void createContainer(OptionSetter &session) override;
-    ~DockerClientImpl();
+    virtual void setAPIVersion(const string &api) override;
+    virtual string createContainer(OptionSetter &session) override;
 
   private:
-    int socket_fd;  ///< socket file descriptor
+    Http::Header createCommonHeader(size_t content_length);
+
+    Http::SimpleHttpClient http_client;
+    string api_version;
   };
 }
 
 using namespace DockerClientpp;
 using namespace Http;
+using namespace Utility;
+using nlohmann::json;
 
-DockerClientImpl::DockerClientImpl(SOCK_TYPE type, const string &path) {
-  if (type == UNIX) {
-    if ((socket_fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-      throw std::runtime_error(strerror(errno));
-    }
-    sockaddr_un server_socket_addr;
-    memset(&server_socket_addr, 0, sizeof(sockaddr_un));
-    server_socket_addr.sun_family = AF_UNIX;
-    strcpy(server_socket_addr.sun_path, path.c_str());
-    int sockaddr_length = offsetof(sockaddr_un, sun_path) +
-      strlen(server_socket_addr.sun_path) + 1;
-    if (connect(socket_fd,
-                reinterpret_cast<sockaddr *>(&server_socket_addr),
-                sockaddr_length) < 0) {
-      close(socket_fd);
-      throw std::runtime_error(strerror(errno));
-    }
-  } else if (type == TCP) {
-    //  TODO: URL support
-    sockaddr_in server_socket_addr;
-    if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      throw std::runtime_error(strerror(errno));
-    }
-    auto seperate_position = path.find(':');
-    server_socket_addr.sin_port = htons(std::stoi(path.substr(seperate_position + 1)));
-    server_socket_addr.sin_addr.s_addr = inet_addr(path.substr(0, seperate_position).c_str());
-    server_socket_addr.sin_family = AF_INET;
+DockerClientImpl::DockerClientImpl(const SOCK_TYPE type, const string &path) :
+  http_client(type, path),
+  api_version("v1.24") {
 
-    if (connect(socket_fd, reinterpret_cast<sockaddr *>(&server_socket_addr),
-                sizeof(server_socket_addr) ) < 0) {
-      throw std::runtime_error(strerror(errno));
-    }
-  }
 }
 
-void DockerClientImpl::createContainer(DockerClientpp::OptionSetter &session) {
-  QueryParam *query_param = nullptr;
+void DockerClientImpl::setAPIVersion(const string &api) {
+  api_version = api;
+}
+
+Http::Header DockerClientImpl::createCommonHeader(size_t content_length) {
+  return {
+    {"Content-Type", "application/json"},
+    {"Content-Length", std::to_string(content_length)},
+    {"Host", api_version},
+    {"Accept", "*/*"},
+  };
+}
+
+string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &session) {
+  QueryParam query_param {};
   auto it = session.data.find("name");
   if (it != session.data.end()) {
-    query_param = new QueryParam;
-    query_param->operator[]("name") = *it;
+    query_param["name"] = *it;
+    session.data.erase(it);
   }
-  Response res = Http::Post(socket_fd,
-                            "/v1.24/containers/create",
-                            // TODO
-                            query_param,
-                            session.dump());
-
+  string raw_request = session.dump();
+  Header header = createCommonHeader(raw_request.size());
+  Response res = http_client.Post("/containers/create",
+                                  header,
+                                  query_param,
+                                  raw_request);
+  json body = json::parse(res.body);
+  switch(res.status_code) {
+  case 201:
+    break;
+  default:
+    throw Exception(body["message"].get<string>());
+  }
+  return body["Id"];
 }
 
-DockerClientImpl::~DockerClientImpl() {
-  close(socket_fd);
-}
-
-DockerClient::DockerClient(SOCK_TYPE type,
+DockerClient::DockerClient(const SOCK_TYPE type,
                            const string &path) :
   m_impl(new DockerClientpp::DockerClientImpl(type, path)) { }
+
+void DockerClient::setAPIVersion(const string &api) {
+  m_impl->setAPIVersion(api);
+}

@@ -6,6 +6,8 @@
 #include <map>
 #include <streambuf>
 
+#include "json.hpp"
+
 namespace DockerClientpp {
   /**
    *  @brief Type of socket that docker daemon use.
@@ -17,16 +19,8 @@ namespace DockerClientpp {
 
   namespace Http {
     typedef std::string Uri;
-    typedef std::map<std::string, std::string> Header;
+    typedef nlohmann::json Header;
     typedef std::map<std::string, std::string> QueryParam;
-    class Response {
-    public:
-      Uri uri;
-      int status_code;
-      Header header;
-    private:
-      std::istream data;
-    };
   }
 }
 
