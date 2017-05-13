@@ -7,6 +7,8 @@
 #include <streambuf>
 
 #include "json.hpp"
+#include "CreateContainerOptions.hpp"
+#include "CreateExecutionOption.hpp"
 
 namespace DockerClientpp {
   /**

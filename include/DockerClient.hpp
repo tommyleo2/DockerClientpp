@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <type_traits>
+#include <typeinfo>
 
-#include "CreateContainerOptions.hpp"
 #include "OptionSetter.hpp"
 #include "SimpleHttpClient.hpp"
 #include "Utility.hpp"
@@ -70,10 +70,32 @@ namespace DockerClientpp {
     }
 
     /**
+     *  @brief Start a stopped or created container
+     *  @param identifier Container's ID or name
+     */
+    void startContainer(const string &identifier);
+
+    /**
      *  @brief Stop a running container
      *  @param identifier Container's ID or name
      */
-    // void stopContainer(const string &identifier);
+    void stopContainer(const string &identifier);
+
+    /**
+     *  @brief Set up an exec running instance in a running container
+     *
+     *  The exectuion won't start until a start command is executed on it
+     *
+     *  @param identifier Container's ID or name
+     *  @return Execution ID, needed when start a exectuion
+     */
+    template<typename... Ts>
+    string createExecution(const string &identifier, Ts &&...ts) {
+      OptionSetter option;
+      setOpt<CreateExecutionOption>(option, FWD(ts)...);
+      return m_impl->createExecution(identifier, option);
+    }
+
 
     /**
      *  @brief Execute a command in a running container
@@ -88,15 +110,13 @@ namespace DockerClientpp {
     // string executeCommand(const string &identifier,
     //                       const vector<string> cmd);
 
-    // string createExecution();
-
     // string startExecution();
 
   private:
     template< template <typename...> class Type, typename T, typename... Ts>
     void setOpt(OptionSetter &option, T &&t, Ts &&... ts) {
       static_assert(is_base_of_template<Type, T>::value,
-                    "This operator does not contain such option");
+                    "This operation does not contain such option");
       option.set(FWD(t));
       setOpt<Type>(option, FWD(ts)...);
     }
@@ -104,7 +124,7 @@ namespace DockerClientpp {
     template< template <typename...> class Type, typename T>
     void setOpt(OptionSetter &option, T &&t) {
       static_assert(is_base_of_template<Type, T>::value,
-                    "This operator does not contain such option");
+                    "This operation does not contain such option");
       option.set(FWD(t));
     }
 

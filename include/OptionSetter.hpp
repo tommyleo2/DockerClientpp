@@ -34,7 +34,7 @@ namespace DockerClientpp {
      *
      *  @return Dumped json string
      */
-    std::string dump() {
+    std::string dump() const {
       return data.dump();
     }
     nlohmann::json data;

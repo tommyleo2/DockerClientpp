@@ -28,7 +28,7 @@ namespace DockerClientpp {
     class SimpleHttpClient {
     public:
       SimpleHttpClient(const SOCK_TYPE type, const std::string &path);
-      ~SimpleHttpClient() { close(fd); }
+      ~SimpleHttpClient();
       Response Post(const Uri &uri,
                     const Header &header,
                     const QueryParam &query_param,
@@ -38,17 +38,8 @@ namespace DockerClientpp {
                    const QueryParam &query_param);
 
     private:
-      string buildQuery(const Http::QueryParam &query_param);
-      void sendRequest(const string &req);
-      void getResponseHeader(Response &response);
-
-      int getStatusCode(const string &line);
-
-      string readLineFromSocket();
-      string readFromSocket(int size);
-
-    private:
-      int fd;
+      class Impl;
+      std::unique_ptr<Impl> m_impl;
     };
   }
 }

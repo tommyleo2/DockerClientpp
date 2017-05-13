@@ -8,7 +8,11 @@ namespace DockerClientpp {
     DockerClientImpl(const SOCK_TYPE type,
                      const string &path);
     virtual void setAPIVersion(const string &api) override;
-    virtual string createContainer(OptionSetter &session) override;
+    virtual string createContainer(OptionSetter &option) override;
+    virtual void startContainer(const string &identifier) override;
+    virtual void stopContainer(const std::string &identifier) override;
+    virtual string createExecution(const string &identifier,
+                                   const OptionSetter &option) override;
 
   private:
     Http::Header createCommonHeader(size_t content_length);
@@ -42,19 +46,19 @@ Http::Header DockerClientImpl::createCommonHeader(size_t content_length) {
   };
 }
 
-string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &session) {
+string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &option) {
   QueryParam query_param {};
-  auto it = session.data.find("name");
-  if (it != session.data.end()) {
+  auto it = option.data.find("name");
+  if (it != option.data.end()) {
     query_param["name"] = *it;
-    session.data.erase(it);
+    option.data.erase(it);
   }
-  string raw_request = session.dump();
-  Header header = createCommonHeader(raw_request.size());
+  string post_data = option.dump();
+  Header header = createCommonHeader(post_data.size());
   Response res = http_client.Post("/containers/create",
                                   header,
                                   query_param,
-                                  raw_request);
+                                  post_data);
   json body = json::parse(res.body);
   switch(res.status_code) {
   case 201:
@@ -65,10 +69,66 @@ string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &session) 
   return body["Id"];
 }
 
+void DockerClientImpl::startContainer(const string &identifier) {
+  Header header = createCommonHeader(0);
+  Response res = http_client.Post("/containers/" + identifier + "/start",
+                                  header, {}, "");
+  switch(res.status_code) {
+  case 204:
+    break;
+  default: {
+    json body = json::parse(res.body);
+    throw Exception(body["message"].get<string>());
+  }
+  }
+}
+
+void DockerClientImpl::stopContainer(const string &identifier) {
+  Header header = createCommonHeader(0);
+  Response res = http_client.Post("/containers/" + identifier + "/stop",
+                                  header, {}, "");
+  switch(res.status_code) {
+  case 204:
+    break;
+  default: {
+    json body = json::parse(res.body);
+    throw Exception(body["message"].get<string>());
+  }
+  }
+}
+
+string DockerClientImpl::createExecution(const string &identifier,
+                                         const OptionSetter &option) {
+  string post_data = option.dump();
+  Header header = createCommonHeader(post_data.size());
+  Response res = http_client.Post("/containers/" + identifier + "/exec",
+                                  header,
+                                  { },
+                                  post_data);
+  json body = json::parse(res.body);
+  switch(res.status_code) {
+  case 201:
+    break;
+  default:
+    throw Exception(body["message"].get<string>());
+  }
+  return body["Id"];
+}
+
+//-------------------------DockerClient Implementation-------------------------
+
 DockerClient::DockerClient(const SOCK_TYPE type,
                            const string &path) :
   m_impl(new DockerClientpp::DockerClientImpl(type, path)) { }
 
 void DockerClient::setAPIVersion(const string &api) {
   m_impl->setAPIVersion(api);
+}
+
+void DockerClient::startContainer(const string &identifier) {
+  m_impl->startContainer(identifier);
+}
+
+void DockerClient::stopContainer(const string &identifier) {
+  m_impl->stopContainer(identifier);
 }

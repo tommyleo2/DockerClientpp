@@ -59,6 +59,13 @@ namespace DockerClientpp {
         return "Image";
       }
     };
+    class StopSignal : virtual public CreateContainerOption<string> {
+    public:
+      StopSignal(const string &data) : CreateContainerOption(data) { }
+      virtual string getName() {
+        return "StopSignal";
+      }
+    };
     class Name : virtual public CreateContainerOption<string> {
     public:
       Name(const string &data) : CreateContainerOption(data) { }
