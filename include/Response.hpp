@@ -10,7 +10,7 @@ namespace DockerClientpp {
      */
     struct Response {
       Uri uri;                  ///<  Uri of the request
-      int status_code;          ///<  Status code of the response
+      int status_code = 404;    ///<  Status code of the response
       Header header;            ///<  Header of the the response
       std::string body;         ///<  Body of the response
     };
