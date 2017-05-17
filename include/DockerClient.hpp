@@ -52,6 +52,15 @@ namespace DockerClientpp {
     void setAPIVersion(const string &api);
 
     /**
+     *  @brief List all images
+     *
+     *  Test Only!
+     *
+     *  @return Images list in json format
+     */
+    string listImages();
+
+    /**
      *  @brief Create a new container based on existing image
      *
      *  This does not mean that you can pass multiple commands to Cmd.

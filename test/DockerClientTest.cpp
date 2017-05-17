@@ -55,8 +55,8 @@ TEST_F(ExecTest, CreateTest) {
   id = dc.createExecution("test",
                           CreateExecution::AttachStdout(true),
                           CreateExecution::AttachStderr(true),
-                          CreateExecution::Tty(true),
-                          CreateExecution::Cmd({"ls", "-l", "h"}));
+                          CreateExecution::Tty(false),
+                          CreateExecution::Cmd({"false"}));
   ASSERT_FALSE(id.empty()) << id;
   //std::system("docker ps -a");
 }

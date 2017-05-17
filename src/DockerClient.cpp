@@ -13,6 +13,7 @@ namespace DockerClientpp {
     virtual void stopContainer(const std::string &identifier) override;
     virtual string createExecution(const string &identifier,
                                    const OptionSetter &option) override;
+    virtual string listImages() override;
 
   private:
     Http::Header createCommonHeader(size_t content_length);
@@ -35,6 +36,23 @@ DockerClientImpl::DockerClientImpl(const SOCK_TYPE type, const string &path) :
 
 void DockerClientImpl::setAPIVersion(const string &api) {
   api_version = api;
+}
+
+string DockerClientImpl::listImages() {
+  Header header = createCommonHeader(0);
+  Response res = http_client.Get("/images/json",
+                                 header,
+                                 {});
+  switch (res.status_code) {
+  case 200: {
+    break;
+  }
+  default:
+    json body = json::parse(res.body);
+    throw Exception(body["message"].get<string>());
+    break;
+  }
+  return res.body;
 }
 
 Http::Header DockerClientImpl::createCommonHeader(size_t content_length) {

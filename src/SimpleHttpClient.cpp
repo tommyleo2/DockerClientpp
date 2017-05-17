@@ -139,16 +139,32 @@ Response SimpleHttpClient::Impl::sendAndRecieve(const string &sent_data) {
     return response;
 
   auto length_it = response.header.find("Content-Length");
-  if (length_it == response.header.end())
-    throw NotImplementError("Cannot handle http response header without Content-Length");
-  int length = std::stoi(length_it->get<std::string>());
-  response.body = readFromSocket(length);
+  auto end_it = response.header.end();
+  //  Read specific length of data
+  if (length_it != end_it) {
+    int length = std::stoi(length_it->get<std::string>());
+    response.body = readFromSocket(length);
+  //  Read according to chunked size
+  } else if ((length_it = response.header.find("Transfer-Encoding")) != end_it &&
+             *length_it == "chunked") {
+    int chunk_size = 0;
+    do {
+      chunk_size = std::stoi(readLineFromSocket(), nullptr, 16);
+      response.body += readFromSocket(chunk_size);
+      readLineFromSocket();
+    } while (chunk_size);
+    //readLineFromSocket();
+  } else {
+    throw NotImplementError("Cannot handle http response header without Content-Length"
+                            " or Transfer-Encoding: chunked");
+  }
   return response;
 }
 
 void SimpleHttpClient::Impl::sendRequest(const string &req) {
   int written = 0;
   int total_size = written;
+  //  cout << req << endl;
   while (total_size < req.size()) {
     written = write(fd, req.c_str() + total_size, req.size() - total_size);
     if (written == -1) {
@@ -164,10 +180,11 @@ void SimpleHttpClient::Impl::getResponseHeader(Response &response) {
   string line = readLineFromSocket();
   response.status_code = getStatusCode(line);
   while (not (line = readLineFromSocket()).empty()) {
-    response_header += line + '\n';
+    auto pos = line.find(':');
+    if (pos == string::npos)
+      throw ParseError("Parse http header error, which is: " + line);
+    response.header[line.substr(0, pos)] = line.substr(pos + 2);
   }
-
-  response.header = Utility::loadHeader(response_header);
 }
 
 int SimpleHttpClient::Impl::getStatusCode(const string &line) {
@@ -186,10 +203,12 @@ string SimpleHttpClient::Impl::readLineFromSocket() {
     } else {
       if (read(fd, &buf, 1) < 1)
         throw SocketError(strerror(errno));
-      if (buf == '\n')
+      if (buf == '\n') {
         break;
-      else
+      } else {
+        result.push_back('\r');
         result.push_back(buf);
+      }
     }
   }
   return result;
