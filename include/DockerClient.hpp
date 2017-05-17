@@ -3,15 +3,15 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <type_traits>
 #include <typeinfo>
 
 #include "OptionSetter.hpp"
 #include "SimpleHttpClient.hpp"
 #include "Utility.hpp"
-#include "Response.hpp"
-#include "Exceptions.hpp"
 
+#include "Response.hpp"
 #include "types.hpp"
 #include "defines.hpp"
 
@@ -96,13 +96,31 @@ namespace DockerClientpp {
      *  The exectuion won't start until a start command is executed on it
      *
      *  @param identifier Container's ID or name
-     *  @return Execution ID, needed when start a exectuion
+     *  @return Execution ID, needed when start a execution
      */
     template<typename... Ts>
     string createExecution(const string &identifier, Ts &&...ts) {
       OptionSetter option;
       setOpt<CreateExecutionOption>(option, FWD(ts)...);
       return m_impl->createExecution(identifier, option);
+    }
+
+    /**
+     *  @brief Start a execution instance that is set up previously
+     *
+     *  The first byte of the return value indicates output type
+     *  0: stdin
+     *  1: stdout
+     *  2: stderr
+     *
+     *  @param Execution instance ID
+     *  @return if Detach is false, return output
+     */
+    template<typename... Ts>
+    std::list<Chunk> startExecution(const string &id, Ts &&...ts) {
+      OptionSetter option;
+      setOpt<StartExecutionOption>(option, FWD(ts)...);
+      return m_impl->startExecution(id, option);
     }
 
 

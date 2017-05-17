@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "DockerClient.hpp"
-#include "CreateContainerOptions.hpp"
+#include "types.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -24,9 +24,9 @@ protected:
                             CreateContainer::Name("test"));
     ASSERT_FALSE(id.empty()) << id;
 
-    ASSERT_NO_THROW(dc.startContainer("test"));
+    dc.startContainer("test");
 
-    ASSERT_NO_THROW(dc.stopContainer("test"));
+    dc.stopContainer("test");
   }
 };
 
@@ -56,7 +56,13 @@ TEST_F(ExecTest, CreateTest) {
                           CreateExecution::AttachStdout(true),
                           CreateExecution::AttachStderr(true),
                           CreateExecution::Tty(false),
-                          CreateExecution::Cmd({"false"}));
+                          CreateExecution::Cmd({"ls"}));
   ASSERT_FALSE(id.empty()) << id;
+  std::cout << id << std::endl;
+  auto output = dc.startExecution(id,
+                                  StartExecution::Detach(false),
+                                  StartExecution::Tty(false));
+  EXPECT_EQ(1, output.back().type);
+  std::cout << output.back().body;
   //std::system("docker ps -a");
 }

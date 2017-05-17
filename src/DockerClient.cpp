@@ -1,6 +1,7 @@
 #include "DockerClient.hpp"
 
 using std::string;
+using std::shared_ptr;
 
 namespace DockerClientpp {
   class DockerClientImpl : public DockerClientImplBase {
@@ -13,6 +14,8 @@ namespace DockerClientpp {
     virtual void stopContainer(const std::string &identifier) override;
     virtual string createExecution(const string &identifier,
                                    const OptionSetter &option) override;
+    virtual std::list<Chunk> startExecution(const string &id,
+                                            const OptionSetter &option) override;
     virtual string listImages() override;
 
   private:
@@ -40,19 +43,19 @@ void DockerClientImpl::setAPIVersion(const string &api) {
 
 string DockerClientImpl::listImages() {
   Header header = createCommonHeader(0);
-  Response res = http_client.Get("/images/json",
+  shared_ptr<Response> res = http_client.Get("/images/json",
                                  header,
                                  {});
-  switch (res.status_code) {
+  switch (res->status_code) {
   case 200: {
     break;
   }
   default:
-    json body = json::parse(res.body);
+    json body = json::parse(res->body);
     throw Exception(body["message"].get<string>());
     break;
   }
-  return res.body;
+  return res->body;
 }
 
 Http::Header DockerClientImpl::createCommonHeader(size_t content_length) {
@@ -73,12 +76,12 @@ string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &option) {
   }
   string post_data = option.dump();
   Header header = createCommonHeader(post_data.size());
-  Response res = http_client.Post("/containers/create",
+  shared_ptr<Response> res = http_client.Post("/containers/create",
                                   header,
                                   query_param,
                                   post_data);
-  json body = json::parse(res.body);
-  switch(res.status_code) {
+  json body = json::parse(res->body);
+  switch(res->status_code) {
   case 201:
     break;
   default:
@@ -89,13 +92,13 @@ string DockerClientImpl::createContainer(DockerClientpp::OptionSetter &option) {
 
 void DockerClientImpl::startContainer(const string &identifier) {
   Header header = createCommonHeader(0);
-  Response res = http_client.Post("/containers/" + identifier + "/start",
+  shared_ptr<Response> res = http_client.Post("/containers/" + identifier + "/start",
                                   header, {}, "");
-  switch(res.status_code) {
+  switch(res->status_code) {
   case 204:
     break;
   default: {
-    json body = json::parse(res.body);
+    json body = json::parse(res->body);
     throw Exception(body["message"].get<string>());
   }
   }
@@ -103,13 +106,13 @@ void DockerClientImpl::startContainer(const string &identifier) {
 
 void DockerClientImpl::stopContainer(const string &identifier) {
   Header header = createCommonHeader(0);
-  Response res = http_client.Post("/containers/" + identifier + "/stop",
+  shared_ptr<Response> res = http_client.Post("/containers/" + identifier + "/stop",
                                   header, {}, "");
-  switch(res.status_code) {
+  switch(res->status_code) {
   case 204:
     break;
   default: {
-    json body = json::parse(res.body);
+    json body = json::parse(res->body);
     throw Exception(body["message"].get<string>());
   }
   }
@@ -119,18 +122,36 @@ string DockerClientImpl::createExecution(const string &identifier,
                                          const OptionSetter &option) {
   string post_data = option.dump();
   Header header = createCommonHeader(post_data.size());
-  Response res = http_client.Post("/containers/" + identifier + "/exec",
+  shared_ptr<Response> res = http_client.Post("/containers/" + identifier + "/exec",
                                   header,
                                   { },
                                   post_data);
-  json body = json::parse(res.body);
-  switch(res.status_code) {
+  json body = json::parse(res->body);
+  switch(res->status_code) {
   case 201:
     break;
   default:
     throw Exception(body["message"].get<string>());
   }
   return body["Id"];
+}
+
+std::list<Chunk> DockerClientImpl::startExecution(const string &id,
+                                        const OptionSetter &option) {
+  string post_data = option.dump();
+  Header header = createCommonHeader(post_data.size());
+  shared_ptr<Response> res = http_client.Post("/exec/" + id + "/start",
+                                  header,
+                                  { },
+                                  post_data);
+  switch(res->status_code) {
+  case 200:
+    break;
+  default:
+    json body = json::parse(res->body);
+    throw Exception(body["message"].get<string>());
+  }
+  return res->chunk;
 }
 
 //-------------------------DockerClient Implementation-------------------------

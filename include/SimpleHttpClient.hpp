@@ -29,13 +29,13 @@ namespace DockerClientpp {
     public:
       SimpleHttpClient(const SOCK_TYPE type, const std::string &path);
       ~SimpleHttpClient();
-      Response Post(const Uri &uri,
-                    const Header &header,
-                    const QueryParam &query_param,
-                    const std::string &data);
-      Response Get(const Uri &uri,
-                   const Header &header,
-                   const QueryParam &query_param);
+      std::shared_ptr<Response> Post(const Uri &uri,
+                                     const Header &header,
+                                     const QueryParam &query_param,
+                                     const std::string &data);
+      std::shared_ptr<Response> Get(const Uri &uri,
+                                    const Header &header,
+                                    const QueryParam &query_param);
 
     private:
       class Impl;

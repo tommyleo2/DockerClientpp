@@ -2,7 +2,10 @@
 #define DEFINES_H
 
 #include "OptionSetter.hpp"
+#include "types.hpp"
+
 #include <type_traits>
+#include <list>
 
 namespace DockerClientpp {
 #define FWD(...) ::std::forward<decltype(__VA_ARGS__)>(__VA_ARGS__)
@@ -38,6 +41,8 @@ namespace DockerClientpp {
       virtual void stopContainer(const string &identifier) = 0;
       virtual string createExecution(const string &identifier,
                                      const OptionSetter &option) = 0;
+      virtual std::list<Chunk> startExecution(const string &id,
+                                              const OptionSetter &option) = 0;
       virtual string listImages() = 0;
     };
   }

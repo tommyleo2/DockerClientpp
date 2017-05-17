@@ -16,7 +16,7 @@ protected:
       auto res = client.Get(uri,
                             header,
                             query_param);
-      EXPECT_EQ(200, res.status_code);
+      EXPECT_EQ(200, res->status_code);
     }
   }
 };

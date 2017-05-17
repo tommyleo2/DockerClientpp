@@ -9,6 +9,8 @@
 #include "json.hpp"
 #include "CreateContainerOptions.hpp"
 #include "CreateExecutionOption.hpp"
+#include "StartExecutionOption.hpp"
+#include "Chunk.hpp"
 
 namespace DockerClientpp {
   /**

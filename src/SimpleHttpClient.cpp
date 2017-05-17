@@ -3,6 +3,7 @@
 using namespace DockerClientpp::Http;
 // using namespace Http;
 using std::string;
+using std::shared_ptr;
 
 namespace DockerClientpp {
   namespace Http {
@@ -10,21 +11,21 @@ namespace DockerClientpp {
     public:
       Impl(const SOCK_TYPE type, const std::string &path);
       ~Impl();
-      Response Post(const Uri &uri,
-                    const Header &header,
-                    const QueryParam &query_param,
-                    const std::string &data);
-      Response Get(const Uri &uri,
-                   const Header &header,
-                   const QueryParam &query_param);
+      shared_ptr<Response> Post(const Uri &uri,
+                                const Header &header,
+                                const QueryParam &query_param,
+                                const std::string &data);
+      shared_ptr<Response> Get(const Uri &uri,
+                               const Header &header,
+                               const QueryParam &query_param);
 
     private:
       string buildQuery(const Http::QueryParam &query_param);
 
-      Response sendAndRecieve(const string &req);
+      std::shared_ptr<Response> sendAndRecieve(const string &req);
 
       void sendRequest(const string &req);
-      void getResponseHeader(Response &response);
+      void getResponseHeader(std::shared_ptr<Response> &response);
 
       int getStatusCode(const string &line);
 
@@ -83,10 +84,10 @@ SimpleHttpClient::Impl::~Impl() {
   close(fd);
 }
 
-Response SimpleHttpClient::Impl::Post(const Uri &uri,
-                                      const Header &header,
-                                      const QueryParam &query_param,
-                                      const string &data) {
+shared_ptr<Response> SimpleHttpClient::Impl::Post(const Uri &uri,
+                                                  const Header &header,
+                                                  const QueryParam &query_param,
+                                                  const string &data) {
   //  build request text
   string sent_data("POST ");
   string uri_with_query = uri + buildQuery(query_param);
@@ -95,14 +96,14 @@ Response SimpleHttpClient::Impl::Post(const Uri &uri,
   sent_data += Utility::dumpHeader(header);
   sent_data += data;
 
-  Response response = sendAndRecieve(sent_data);
-  response.uri = uri_with_query;
+  shared_ptr<Response> response = sendAndRecieve(sent_data);
+  response->uri = uri_with_query;
   return response;
 }
 
-Response SimpleHttpClient::Impl::Get(const Uri &uri,
-                                     const Header &header,
-                                     const QueryParam &query_param) {
+shared_ptr<Response> SimpleHttpClient::Impl::Get(const Uri &uri,
+                                                 const Header &header,
+                                                 const QueryParam &query_param) {
   //  build request text
   string sent_data("GET ");
   string uri_with_query = uri + buildQuery(query_param);
@@ -110,8 +111,8 @@ Response SimpleHttpClient::Impl::Get(const Uri &uri,
   sent_data += " HTTP/1.1\r\n";
   sent_data += Utility::dumpHeader(header);
 
-  Response response = sendAndRecieve(sent_data);
-  response.uri = uri_with_query;
+  shared_ptr<Response> response = sendAndRecieve(sent_data);
+  response->uri = uri_with_query;
   return response;
 }
 
@@ -128,32 +129,39 @@ string SimpleHttpClient::Impl::buildQuery(const Http::QueryParam &query_param) {
   return result;
 }
 
-Response SimpleHttpClient::Impl::sendAndRecieve(const string &sent_data) {
+shared_ptr<Response> SimpleHttpClient::Impl::sendAndRecieve(const string &sent_data) {
   sendRequest(sent_data);
 
-  Response response;
+  shared_ptr<Response> response = std::make_shared<Response>();
   getResponseHeader(response);
 
   //  TODO: A better solution for skipping entity
-  if (response.status_code == 204)
+  if (response->status_code == 204)
     return response;
 
-  auto length_it = response.header.find("Content-Length");
-  auto end_it = response.header.end();
-  //  Read specific length of data
+  auto length_it = response->header.find("Content-Length");
+  auto end_it = response->header.end();
   if (length_it != end_it) {
+    //  Read specific length of data
     int length = std::stoi(length_it->get<std::string>());
-    response.body = readFromSocket(length);
-  //  Read according to chunked size
-  } else if ((length_it = response.header.find("Transfer-Encoding")) != end_it &&
+    response->body = readFromSocket(length);
+  } else if ((length_it = response->header.find("Transfer-Encoding")) != end_it &&
              *length_it == "chunked") {
+    //  Read according to chunked size
     int chunk_size = 0;
     do {
       chunk_size = std::stoi(readLineFromSocket(), nullptr, 16);
-      response.body += readFromSocket(chunk_size);
+      response->body += readFromSocket(chunk_size);
       readLineFromSocket();
     } while (chunk_size);
-    //readLineFromSocket();
+  } else if ((length_it = response->header.find("Content-Type")) != end_it &&
+             *length_it == "application/vnd.docker.raw-stream") {
+    //  Read stream according to docker stream protocol
+    //  https://docs.docker.com/engine/api/v1.24/#attach-to-a-container
+    response->chunk.push_back(Chunk{readFromSocket(1)[0], ""});
+    readFromSocket(3);
+    int chunk_size = __builtin_bswap32(*reinterpret_cast<const unsigned int *>(readFromSocket(4).c_str()));
+    response->chunk.back().body = readFromSocket(chunk_size);
   } else {
     throw NotImplementError("Cannot handle http response header without Content-Length"
                             " or Transfer-Encoding: chunked");
@@ -174,16 +182,22 @@ void SimpleHttpClient::Impl::sendRequest(const string &req) {
   }
 }
 
-void SimpleHttpClient::Impl::getResponseHeader(Response &response) {
-  string response_header;
+bool flag = false;
+
+void SimpleHttpClient::Impl::getResponseHeader(shared_ptr<Response> &response) {
   //  Read http response header from socket
+  // if (flag) {
+  //   string line = readFromSocket(1000);
+  //   cout << line << endl;
+  // }
+  flag = true;
   string line = readLineFromSocket();
-  response.status_code = getStatusCode(line);
+  response->status_code = getStatusCode(line);
   while (not (line = readLineFromSocket()).empty()) {
     auto pos = line.find(':');
     if (pos == string::npos)
       throw ParseError("Parse http header error, which is: " + line);
-    response.header[line.substr(0, pos)] = line.substr(pos + 2);
+    response->header[line.substr(0, pos)] = line.substr(pos + 2);
   }
 }
 
@@ -242,15 +256,15 @@ SimpleHttpClient::SimpleHttpClient(const SOCK_TYPE type,
 
 SimpleHttpClient::~SimpleHttpClient() { }
 
-Response SimpleHttpClient::Post(const Uri &uri,
-                                const Header &header,
-                                const QueryParam &query_param,
-                                const std::string &data) {
+shared_ptr<Response> SimpleHttpClient::Post(const Uri &uri,
+                                            const Header &header,
+                                            const QueryParam &query_param,
+                                            const std::string &data) {
   return m_impl->Post(uri, header, query_param, data);
 }
 
-Response SimpleHttpClient::Get(const Uri &uri,
-                               const Header &header,
-                               const QueryParam &query_param) {
+shared_ptr<Response> SimpleHttpClient::Get(const Uri &uri,
+                                           const Header &header,
+                                           const QueryParam &query_param) {
   return m_impl->Get(uri, header, query_param);
 }
