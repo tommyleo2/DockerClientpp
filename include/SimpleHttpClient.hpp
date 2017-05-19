@@ -6,14 +6,6 @@
 #include "Utility.hpp"
 #include "Exceptions.hpp"
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <stddef.h>
 #include <algorithm>
 
 namespace DockerClientpp {

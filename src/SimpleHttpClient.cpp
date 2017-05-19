@@ -1,4 +1,5 @@
 #include "SimpleHttpClient.hpp"
+#include "Socket.hpp"
 
 using namespace DockerClientpp::Http;
 // using namespace Http;
@@ -29,11 +30,8 @@ namespace DockerClientpp {
 
       int getStatusCode(const string &line);
 
-      string readLineFromSocket();
-      string readFromSocket(int size);
-
     private:
-      int fd;
+      Socket socket;
     };
   }
 }
@@ -41,53 +39,18 @@ namespace DockerClientpp {
 using std::cout;
 using std::endl;
 
-//using namespace __private;
-
 const int READ_BUFFER_SIZE = 256;
 
-SimpleHttpClient::Impl::Impl(const SOCK_TYPE type, const std::string &path) {
-  if (type == UNIX) {
-    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-      throw SocketError(strerror(errno));
-    }
-    sockaddr_un server_socket_addr;
-    memset(&server_socket_addr, 0, sizeof(sockaddr_un));
-    server_socket_addr.sun_family = AF_UNIX;
-    strcpy(server_socket_addr.sun_path, path.c_str());
-    int sockaddr_length = offsetof(sockaddr_un, sun_path) +
-      strlen(server_socket_addr.sun_path) + 1;
-    if (connect(fd,
-                reinterpret_cast<sockaddr *>(&server_socket_addr),
-                sockaddr_length) < 0) {
-      close(fd);
-      throw SocketError(strerror(errno));
-    }
-  } else if (type == TCP) {
-    //  TODO: URL support
-    sockaddr_in server_socket_addr;
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      throw SocketError(strerror(errno));
-    }
-    auto seperate_position = path.find(':');
-    server_socket_addr.sin_port = htons(std::stoi(path.substr(seperate_position + 1)));
-    server_socket_addr.sin_addr.s_addr = inet_addr(path.substr(0, seperate_position).c_str());
-    server_socket_addr.sin_family = AF_INET;
+SimpleHttpClient::Impl::Impl(const SOCK_TYPE type, const std::string &path) :
+  socket(type, path) { }
 
-    if (connect(fd, reinterpret_cast<sockaddr *>(&server_socket_addr),
-                sizeof(server_socket_addr) ) < 0) {
-      throw SocketError(strerror(errno));
-    }
-  }
-}
-
-SimpleHttpClient::Impl::~Impl() {
-  close(fd);
-}
+SimpleHttpClient::Impl::~Impl() { }
 
 shared_ptr<Response> SimpleHttpClient::Impl::Post(const Uri &uri,
                                                   const Header &header,
                                                   const QueryParam &query_param,
                                                   const string &data) {
+  socket.connect();
   //  build request text
   string sent_data("POST ");
   string uri_with_query = uri + buildQuery(query_param);
@@ -104,6 +67,7 @@ shared_ptr<Response> SimpleHttpClient::Impl::Post(const Uri &uri,
 shared_ptr<Response> SimpleHttpClient::Impl::Get(const Uri &uri,
                                                  const Header &header,
                                                  const QueryParam &query_param) {
+  socket.connect();
   //  build request text
   string sent_data("GET ");
   string uri_with_query = uri + buildQuery(query_param);
@@ -144,24 +108,33 @@ shared_ptr<Response> SimpleHttpClient::Impl::sendAndRecieve(const string &sent_d
   if (length_it != end_it) {
     //  Read specific length of data
     int length = std::stoi(length_it->get<std::string>());
-    response->body = readFromSocket(length);
+    response->body = socket.read(length);
   } else if ((length_it = response->header.find("Transfer-Encoding")) != end_it &&
              *length_it == "chunked") {
     //  Read according to chunked size
     int chunk_size = 0;
     do {
-      chunk_size = std::stoi(readLineFromSocket(), nullptr, 16);
-      response->body += readFromSocket(chunk_size);
-      readLineFromSocket();
+      string line;
+      chunk_size = std::stoi(socket.readLine(line), nullptr, 16);
+      response->body += socket.read(chunk_size);
+      socket.readLine(line);
     } while (chunk_size);
   } else if ((length_it = response->header.find("Content-Type")) != end_it &&
              *length_it == "application/vnd.docker.raw-stream") {
-    //  Read stream according to docker stream protocol
-    //  https://docs.docker.com/engine/api/v1.24/#attach-to-a-container
-    response->chunk.push_back(Chunk{readFromSocket(1)[0], ""});
-    readFromSocket(3);
-    int chunk_size = __builtin_bswap32(*reinterpret_cast<const unsigned int *>(readFromSocket(4).c_str()));
-    response->chunk.back().body = readFromSocket(chunk_size);
+    int chunk_size = 0;
+    while (true) {
+      //  Read stream according to docker stream protocol
+      //  https://docs.docker.com/engine/api/v1.24/#attach-to-a-container
+      //  response->chunk->push_back(Chunk{readFromSocket(1)[0], ""});
+      string line;
+      try {
+        socket.read(4);
+        chunk_size = __builtin_bswap32(*reinterpret_cast<const unsigned int *>(socket.read(4).c_str()));
+      } catch (SocketError &e) {
+        break;
+      }
+      response->body += (socket.read(chunk_size));
+    }
   } else {
     throw NotImplementError("Cannot handle http response header without Content-Length"
                             " or Transfer-Encoding: chunked");
@@ -170,19 +143,8 @@ shared_ptr<Response> SimpleHttpClient::Impl::sendAndRecieve(const string &sent_d
 }
 
 void SimpleHttpClient::Impl::sendRequest(const string &req) {
-  int written = 0;
-  int total_size = written;
-  //  cout << req << endl;
-  while (total_size < req.size()) {
-    written = write(fd, req.c_str() + total_size, req.size() - total_size);
-    if (written == -1) {
-      throw SocketError(strerror(errno));
-    }
-    total_size += written;
-  }
+  socket.write(req);
 }
-
-bool flag = false;
 
 void SimpleHttpClient::Impl::getResponseHeader(shared_ptr<Response> &response) {
   //  Read http response header from socket
@@ -190,14 +152,16 @@ void SimpleHttpClient::Impl::getResponseHeader(shared_ptr<Response> &response) {
   //   string line = readFromSocket(1000);
   //   cout << line << endl;
   // }
-  flag = true;
-  string line = readLineFromSocket();
+  string line;
+  socket.readLine(line);
   response->status_code = getStatusCode(line);
-  while (not (line = readLineFromSocket()).empty()) {
+  line.clear();
+  while (not socket.readLine(line).empty()) {
     auto pos = line.find(':');
     if (pos == string::npos)
       throw ParseError("Parse http header error, which is: " + line);
     response->header[line.substr(0, pos)] = line.substr(pos + 2);
+    line.clear();
   }
 }
 
@@ -206,47 +170,6 @@ int SimpleHttpClient::Impl::getStatusCode(const string &line) {
   return std::stoi(line.substr(pos, 3));
 }
 
-string SimpleHttpClient::Impl::readLineFromSocket() {
-  string result;
-  char buf;
-  while (true) {
-    if (read(fd, &buf, 1) < 1)
-      throw SocketError(strerror(errno));
-    if (buf != '\r') {
-      result.push_back(buf);
-    } else {
-      if (read(fd, &buf, 1) < 1)
-        throw SocketError(strerror(errno));
-      if (buf == '\n') {
-        break;
-      } else {
-        result.push_back('\r');
-        result.push_back(buf);
-      }
-    }
-  }
-  return result;
-}
-
-string SimpleHttpClient::Impl::readFromSocket(int size) {
-  string result;
-  const int BUFF_SIZE = 256;
-  char buff[BUFF_SIZE];
-  int read_d = 0;
-  while (size > 0) {
-    if (size < BUFF_SIZE) {
-      read_d = read(fd, buff, size);
-    } else {
-      read_d = read(fd, buff, BUFF_SIZE - 1);
-    }
-    if (read_d < 0)
-      throw SocketError(strerror(errno));
-    buff[read_d] = 0;
-    result.append(buff, read_d);
-    size -= read_d;
-  }
-  return result;
-}
 
 //-------------------------SimpleHttpClient Implementation-------------------------//
 

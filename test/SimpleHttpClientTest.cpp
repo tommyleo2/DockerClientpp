@@ -5,11 +5,12 @@ using namespace DockerClientpp::Http;
 
 class IOTest : public ::testing::Test {
 protected:
-  static SimpleHttpClient unix_client;
-  static SimpleHttpClient tcp_client;
-  static string uri;
-  static Header header;
-  static QueryParam query_param;
+  IOTest();
+  SimpleHttpClient unix_client;
+  SimpleHttpClient tcp_client;
+  string uri;
+  Header header;
+  QueryParam query_param;
 
   void test(SimpleHttpClient &client) {
     for (int i = 0; i < 100; i++) {
@@ -19,19 +20,24 @@ protected:
       EXPECT_EQ(200, res->status_code);
     }
   }
+
+  virtual void TearDown() override {
+    std::system("docker rm -f test > /dev/null 2>&1");
+  }
 };
 
-SimpleHttpClient IOTest::unix_client(DockerClientpp::UNIX, "/var/run/docker.sock");
-SimpleHttpClient IOTest::tcp_client(DockerClientpp::TCP, "127.0.0.1:8888");
-string IOTest::uri("/images/json");
-Header IOTest::header {
-  {"Content-Type", "application/json"},
-  {"Host", "v1.24"},
-  {"Accept", "*/*"}
-};
-QueryParam IOTest::query_param {
-  {"all", "0"}
-};
+IOTest::IOTest() :
+  unix_client(DockerClientpp::UNIX, "/var/run/docker.sock"),
+  tcp_client(DockerClientpp::TCP, "127.0.0.1:8888"),
+  uri("/images/json"),
+  header {
+    {"Content-Type", "application/json"},
+    {"Host", "v1.24"},
+    {"Accept", "*/*"}
+  },
+  query_param {
+    {"all", "0"}
+  } { }
 
 
 TEST_F(IOTest, TcpSocketTest) {

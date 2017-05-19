@@ -2,6 +2,7 @@
 
 using std::string;
 using std::shared_ptr;
+using std::list;
 
 namespace DockerClientpp {
   class DockerClientImpl : public DockerClientImplBase {
@@ -14,8 +15,8 @@ namespace DockerClientpp {
     virtual void stopContainer(const std::string &identifier) override;
     virtual string createExecution(const string &identifier,
                                    const OptionSetter &option) override;
-    virtual std::list<Chunk> startExecution(const string &id,
-                                            const OptionSetter &option) override;
+    virtual string startExecution(const string &id,
+                                  const OptionSetter &option) override;
     virtual string listImages() override;
 
   private:
@@ -136,7 +137,7 @@ string DockerClientImpl::createExecution(const string &identifier,
   return body["Id"];
 }
 
-std::list<Chunk> DockerClientImpl::startExecution(const string &id,
+string DockerClientImpl::startExecution(const string &id,
                                         const OptionSetter &option) {
   string post_data = option.dump();
   Header header = createCommonHeader(post_data.size());
@@ -151,7 +152,7 @@ std::list<Chunk> DockerClientImpl::startExecution(const string &id,
     json body = json::parse(res->body);
     throw Exception(body["message"].get<string>());
   }
-  return res->chunk;
+  return res->body;
 }
 
 //-------------------------DockerClient Implementation-------------------------

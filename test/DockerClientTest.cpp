@@ -45,24 +45,25 @@ TEST_F(LaunchTest, UnixSocketTest) {
 }
 
 TEST_F(LaunchTest, TCPSocketTest) {
-  DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
+  //DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
+  DockerClient dc;
   test(dc);
 }
 
 TEST_F(ExecTest, CreateTest) {
-  DockerClient dc;
+  DockerClient dc;//(TCP, "127.0.0.1:8888");
   string id;
-  id = dc.createExecution("test",
-                          CreateExecution::AttachStdout(true),
-                          CreateExecution::AttachStderr(true),
-                          CreateExecution::Tty(false),
-                          CreateExecution::Cmd({"ls"}));
-  ASSERT_FALSE(id.empty()) << id;
-  std::cout << id << std::endl;
-  auto output = dc.startExecution(id,
-                                  StartExecution::Detach(false),
-                                  StartExecution::Tty(false));
-  EXPECT_EQ(1, output.back().type);
-  std::cout << output.back().body;
+  for (int i = 0; i < 5; i++) {
+    id = dc.createExecution("test",
+                            CreateExecution::AttachStdout(true),
+                            CreateExecution::AttachStderr(true),
+                            CreateExecution::Tty(false),
+                            CreateExecution::Cmd({"echo", "1"}));
+    ASSERT_FALSE(id.empty()) << id;
+    auto output = dc.startExecution(id,
+                                    StartExecution::Detach(false),
+                                    StartExecution::Tty(false));
+    EXPECT_EQ("1\n", output);
+  }
   //std::system("docker ps -a");
 }

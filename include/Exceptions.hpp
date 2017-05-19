@@ -34,6 +34,14 @@ namespace DockerClientpp {
     explicit SocketError(const string &what) : Exception(what) { }
   };
 
+  class SocketEOFError : public SocketError {
+  public:
+    SocketEOFError(int read): SocketError("EOF"), read(read) { }
+    int readSize() { return read; }
+  private:
+    int read;
+  };
+
   class NotImplementError : public Exception {
   public:
     explicit NotImplementError(const string &what) : Exception(what) { }

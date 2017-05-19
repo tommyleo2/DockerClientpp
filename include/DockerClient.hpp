@@ -18,6 +18,8 @@
 namespace DockerClientpp {
   using std::string;
   using std::vector;
+  using std::list;
+  using std::shared_ptr;
   using namespace __private;
   /**
    *  @brief Docker client class
@@ -117,7 +119,7 @@ namespace DockerClientpp {
      *  @return if Detach is false, return output
      */
     template<typename... Ts>
-    std::list<Chunk> startExecution(const string &id, Ts &&...ts) {
+    string startExecution(const string &id, Ts &&...ts) {
       OptionSetter option;
       setOpt<StartExecutionOption>(option, FWD(ts)...);
       return m_impl->startExecution(id, option);

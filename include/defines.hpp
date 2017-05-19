@@ -41,8 +41,8 @@ namespace DockerClientpp {
       virtual void stopContainer(const string &identifier) = 0;
       virtual string createExecution(const string &identifier,
                                      const OptionSetter &option) = 0;
-      virtual std::list<Chunk> startExecution(const string &id,
-                                              const OptionSetter &option) = 0;
+      virtual string startExecution(const string &id,
+                                    const OptionSetter &option) = 0;
       virtual string listImages() = 0;
     };
   }
