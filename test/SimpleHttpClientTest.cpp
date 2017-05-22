@@ -20,10 +20,6 @@ protected:
       EXPECT_EQ(200, res->status_code);
     }
   }
-
-  virtual void TearDown() override {
-    std::system("docker rm -f test > /dev/null 2>&1");
-  }
 };
 
 IOTest::IOTest() :

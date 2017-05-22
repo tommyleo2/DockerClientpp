@@ -14,6 +14,7 @@
 #include "Response.hpp"
 #include "types.hpp"
 #include "defines.hpp"
+#include "Archive.hpp"
 
 namespace DockerClientpp {
   using std::string;
@@ -115,7 +116,7 @@ namespace DockerClientpp {
      *  1: stdout
      *  2: stderr
      *
-     *  @param Execution instance ID
+     *  @param id Execution instance ID
      *  @return if Detach is false, return output
      */
     template<typename... Ts>
@@ -125,9 +126,16 @@ namespace DockerClientpp {
       return m_impl->startExecution(id, option);
     }
 
+    /**
+     *  @brief Inspect a execution instance
+     *
+     *  @param id Execution instance ID
+     *  @return Execution status
+     */
+    string inspectExecution(const string &id);
 
     /**
-     *  @brief Execute a command in a running container
+     *  @brief Execute a command in a running container, like `docker exec` command
      *
      *  For reference of parameters cmd see createContainer()
      *
@@ -136,10 +144,19 @@ namespace DockerClientpp {
      *  @return
      *  @sa createContainer()
      */
-    // string executeCommand(const string &identifier,
-    //                       const vector<string> cmd);
+    template<typename... Ts>
+    string executeCommand(const string &identifier, Ts &&...ts) {
 
-    // string startExecution();
+    }
+
+    /**
+     *  @brief Put files to container
+     *
+     *  @param files files need to be put
+     *  @param path location in the container
+     */
+    void putFiles(const string &identifier,
+                  const vector<string> &files, const string &path);
 
   private:
     template< template <typename...> class Type, typename T, typename... Ts>

@@ -16,6 +16,10 @@ namespace DockerClientpp {
                                 const Header &header,
                                 const QueryParam &query_param,
                                 const std::string &data);
+      shared_ptr<Response> Put(const Uri &uri,
+                               const Header &header,
+                               const QueryParam &query_param,
+                               const std::string &data);
       shared_ptr<Response> Get(const Uri &uri,
                                const Header &header,
                                const QueryParam &query_param);
@@ -53,6 +57,24 @@ shared_ptr<Response> SimpleHttpClient::Impl::Post(const Uri &uri,
   socket.connect();
   //  build request text
   string sent_data("POST ");
+  string uri_with_query = uri + buildQuery(query_param);
+  sent_data += uri_with_query;
+  sent_data += " HTTP/1.1\r\n";
+  sent_data += Utility::dumpHeader(header);
+  sent_data += data;
+
+  shared_ptr<Response> response = sendAndRecieve(sent_data);
+  response->uri = uri_with_query;
+  return response;
+}
+
+shared_ptr<Response> SimpleHttpClient::Impl::Put(const Uri &uri,
+                                                  const Header &header,
+                                                  const QueryParam &query_param,
+                                                  const string &data) {
+  socket.connect();
+  //  build request text
+  string sent_data("PUT ");
   string uri_with_query = uri + buildQuery(query_param);
   sent_data += uri_with_query;
   sent_data += " HTTP/1.1\r\n";
@@ -135,10 +157,10 @@ shared_ptr<Response> SimpleHttpClient::Impl::sendAndRecieve(const string &sent_d
       }
       response->body += (socket.read(chunk_size));
     }
-  } else {
-    throw NotImplementError("Cannot handle http response header without Content-Length"
-                            " or Transfer-Encoding: chunked");
-  }
+  }//  else {
+  //   throw NotImplementError("Cannot handle http response header without Content-Length"
+  //                           " or Transfer-Encoding: chunked");
+  // }
   return response;
 }
 
@@ -182,8 +204,15 @@ SimpleHttpClient::~SimpleHttpClient() { }
 shared_ptr<Response> SimpleHttpClient::Post(const Uri &uri,
                                             const Header &header,
                                             const QueryParam &query_param,
-                                            const std::string &data) {
+                                            const string &data) {
   return m_impl->Post(uri, header, query_param, data);
+}
+
+shared_ptr<Response> SimpleHttpClient::Put(const Uri &uri,
+                                           const Header &header,
+                                           const QueryParam &query_param,
+                                           const string &data) {
+  return m_impl->Put(uri, header, query_param, data);
 }
 
 shared_ptr<Response> SimpleHttpClient::Get(const Uri &uri,

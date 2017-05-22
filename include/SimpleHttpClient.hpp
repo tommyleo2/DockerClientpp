@@ -25,6 +25,10 @@ namespace DockerClientpp {
                                      const Header &header,
                                      const QueryParam &query_param,
                                      const std::string &data);
+      std::shared_ptr<Response> Put(const Uri &uri,
+                                    const Header &header,
+                                    const QueryParam &query_param,
+                                    const std::string &data);
       std::shared_ptr<Response> Get(const Uri &uri,
                                     const Header &header,
                                     const QueryParam &query_param);

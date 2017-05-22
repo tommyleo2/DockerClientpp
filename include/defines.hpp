@@ -2,7 +2,6 @@
 #define DEFINES_H
 
 #include "OptionSetter.hpp"
-#include "types.hpp"
 
 #include <type_traits>
 #include <list>
@@ -44,6 +43,10 @@ namespace DockerClientpp {
       virtual string startExecution(const string &id,
                                     const OptionSetter &option) = 0;
       virtual string listImages() = 0;
+      virtual void putFiles(const std::string &identifier,
+                            const std::vector<string> &files,
+                            const string &path) = 0;
+      virtual string inspectExecution(const string &id) = 0;
     };
   }
 }

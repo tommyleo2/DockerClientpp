@@ -11,7 +11,9 @@ namespace DockerClientpp {
     void read(char *buffer, size_t size);
     size_t readLine(char *buffer);
     const std::string &readLine(std::string &buffer);
+
     void write(const char *buffer, size_t size);
+    void write(Utility::Archive &archive);
   private:
     int fd;
     int addr_length;
@@ -21,7 +23,7 @@ namespace DockerClientpp {
 
 using namespace DockerClientpp;
 
-Socket::Impl::Impl(const SOCK_TYPE type, const string &path) {
+Socket::Impl::Impl(const SOCK_TYPE type, const string &path) : fd(-1) {
   if (type == UNIX) {
     sockaddr_un server_socket_addr;
     memset(&server_socket_addr, 0, sizeof(sockaddr_un));
@@ -83,19 +85,6 @@ void Socket::Impl::read(char *buffer, size_t size) {
   }
 }
 
-void Socket::Impl::write(const char *buffer, size_t size) {
-  int written = 0;
-  size_t total_size = written;
-  //  cout << req << endl;
-  while (total_size < size) {
-    written = ::write(fd, buffer + total_size, size - total_size);
-    if (written == -1) {
-      throw SocketError(strerror(errno));
-    }
-    total_size += written;
-  }
-}
-
 size_t Socket::Impl::readLine(char *buffer) {
   int total = 0;
   while (true) {
@@ -154,6 +143,23 @@ const std::string &Socket::Impl::readLine(std::string &buffer) {
   }
 }
 
+void Socket::Impl::write(const char *buffer, size_t size) {
+  int written = 0;
+  size_t total_size = written;
+  //  cout << req << endl;
+  while (total_size < size) {
+    written = ::write(fd, buffer + total_size, size - total_size);
+    if (written == -1) {
+      throw SocketError(strerror(errno));
+    }
+    total_size += written;
+  }
+}
+
+void Socket::Impl::write(Utility::Archive &archive) {
+  archive.writeToFd(fd);
+}
+
 //-------------------------Socket Implementation-------------------------//
 
 Socket::Socket(const SOCK_TYPE type, const std::string &path) :
@@ -171,11 +177,12 @@ void Socket::read(char *buffer, size_t size) {
 
 std::string Socket::read(size_t size) {
   std::string result;
-  char buffer[256];
-  while (size > 256) {
-    m_impl->read(buffer, 256);
-    result.append(buffer, 256);
-    size -= 256;
+  const int BUFFER_SIZE = 256;
+  char buffer[BUFFER_SIZE];
+  while (size > BUFFER_SIZE) {
+    m_impl->read(buffer, BUFFER_SIZE);
+    result.append(buffer, BUFFER_SIZE);
+    size -= BUFFER_SIZE;
   }
   m_impl->read(buffer, size);
   result.append(buffer, size);
@@ -196,4 +203,8 @@ void Socket::write(const char *content, size_t size) {
 
 void Socket::write(const std::string &content) {
   m_impl->write(content.c_str(), content.size());
+}
+
+void Socket::write(Utility::Archive &archive) {
+  m_impl->write(archive);
 }

@@ -1,5 +1,7 @@
 #include "DockerClient.hpp"
 
+#include <fstream>
+
 using std::string;
 using std::shared_ptr;
 using std::list;
@@ -18,6 +20,10 @@ namespace DockerClientpp {
     virtual string startExecution(const string &id,
                                   const OptionSetter &option) override;
     virtual string listImages() override;
+    virtual void putFiles(const string &identifier,
+                          const vector<string> &files,
+                          const string &path) override;
+    virtual string inspectExecution(const string &id) override;
 
   private:
     Http::Header createCommonHeader(size_t content_length);
@@ -155,6 +161,46 @@ string DockerClientImpl::startExecution(const string &id,
   return res->body;
 }
 
+void DockerClientImpl::putFiles(const string &identifier,
+                                const vector<string> &files,
+                                const string &path) {
+  Utility::Archive ar(files);
+  string put_data;
+  ar.getTar(put_data);
+  Header header = createCommonHeader(put_data.size());
+
+  header["Content-Type"] = "application/x-tar";
+  QueryParam query_param {
+    {"path", path}
+  };
+  shared_ptr<Response> res = http_client.Put("/containers/" + identifier + "/archive",
+                                             header,
+                                             query_param,
+                                             put_data);
+  switch(res->status_code) {
+  case 200:
+    break;
+  default:
+    json body = json::parse(res->body);
+    throw Exception(body["message"].get<string>());
+  }
+}
+
+string DockerClientImpl::inspectExecution(const string &id) {
+  Header header = createCommonHeader(0);
+  shared_ptr<Response> res = http_client.Get("/exec/" + id + "/json",
+                                             header,
+                                             {});
+  switch(res->status_code) {
+  case 200:
+    break;
+  default:
+    json body = json::parse(res->body);
+    throw Exception(body["message"].get<string>());
+  }
+  return res->body;
+}
+
 //-------------------------DockerClient Implementation-------------------------
 
 DockerClient::DockerClient(const SOCK_TYPE type,
@@ -171,4 +217,13 @@ void DockerClient::startContainer(const string &identifier) {
 
 void DockerClient::stopContainer(const string &identifier) {
   m_impl->stopContainer(identifier);
+}
+
+void DockerClient::putFiles(const string &identifier,
+                            const vector<string> &files, const string &path) {
+  m_impl->putFiles(identifier, files, path);
+}
+
+string DockerClient::inspectExecution(const string &id) {
+  return m_impl->inspectExecution(id);
 }

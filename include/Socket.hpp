@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "Exceptions.hpp"
+#include "Archive.hpp"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -23,13 +24,14 @@ namespace DockerClientpp {
     std::string read(size_t size);
     size_t readLine(char *buffer);
     const std::string &readLine(std::string &buffer);
+
     void write(const char *content, size_t size);
     void write(const std::string &content);
+    void write(Utility::Archive &archive);
   private:
     class Impl;
     std::unique_ptr<Impl> m_impl;
   };
-
 }
 
 #endif /* SOCKET_H */

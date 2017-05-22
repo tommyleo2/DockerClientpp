@@ -7,6 +7,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(GTest)
 find_package(Threads REQUIRED)
+find_library(LIB_archive archive)
 
 enable_testing()
 
@@ -18,6 +19,7 @@ target_compile_features(${PROJECT_NAME}Test PRIVATE cxx_range_for)
 target_link_libraries(${PROJECT_NAME}Test
   GTest::GTest
   ${CMAKE_THREAD_LIBS_INIT}
+  ${LIB_archive}
   )
 
 add_test(test ${PROJECT_NAME}Test)
