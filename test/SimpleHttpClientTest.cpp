@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include "SimpleHttpClient.hpp"
 
 using namespace DockerClientpp::Http;
@@ -24,7 +24,8 @@ protected:
 
 IOTest::IOTest() :
   unix_client(DockerClientpp::UNIX, "/var/run/docker.sock"),
-  tcp_client(DockerClientpp::TCP, "127.0.0.1:8888"),
+  //  tcp_client(DockerClientpp::TCP, "127.0.0.1:8888"),
+  tcp_client(DockerClientpp::UNIX, "/var/run/docker.sock"),
   uri("/images/json"),
   header {
     {"Content-Type", "application/json"},

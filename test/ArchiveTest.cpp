@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <fstream>
 
 #include <sys/types.h>
@@ -22,6 +22,11 @@ TEST(ArchiveTest, CompressTest) {
 
   DockerClientpp::Utility::Archive ac({"1", "2"});
   ac.writeToFd(fd);
+
+  close(fd);
+
+  std::remove("1");
+  std::remove("2");
 
   //DockerClientpp::Socket s(DockerClientpp::UNIX, "/var/run/docker.sock");
 
