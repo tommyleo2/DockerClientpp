@@ -9,7 +9,7 @@ file(GLOB DOCKER_CLIENT_PP_SRC_FILES src/*.cpp)
 find_package(Threads REQUIRED)
 add_subdirectory("ext/libarchive")
 
-set(DOCKER_CLIENT_PP_LIB_TARGET dockerclientpp)
+set(DOCKER_CLIENT_PP_LIB_TARGET DockerClientpp)
 
 add_library(${DOCKER_CLIENT_PP_LIB_TARGET} SHARED ${DOCKER_CLIENT_PP_SRC_FILES})
 set_target_properties(${DOCKER_CLIENT_PP_LIB_TARGET}
@@ -41,5 +41,5 @@ if (ENABLE_TEST)
     ${CMAKE_THREAD_LIBS_INIT}
     archive)
 
-  add_test(test ${PROJECT_NAME}Test)
+  add_test(DockerClientppTest ${PROJECT_NAME}Test)
 endif()
