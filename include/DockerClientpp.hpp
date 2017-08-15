@@ -3,8 +3,6 @@
 
 #include "DockerClient.hpp"
 
-namespace DockerClientpp {
-
-}
+namespace DockerClientpp {}
 
 #endif /* DOCKERCLIENTPP_H */
