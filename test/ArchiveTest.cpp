@@ -1,10 +1,9 @@
-#include "gtest/gtest.h"
 #include <fstream>
+#include "gtest/gtest.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "Archive.hpp"
 
@@ -18,9 +17,10 @@ TEST(ArchiveTest, CompressTest) {
   fs << 2 << std::endl;
   fs.close();
 
-  int fd = open("test.tar", O_TRUNC|O_WRONLY, 0644);
+  int fd = open("test.tar", O_TRUNC | O_WRONLY, 0644);
 
-  DockerClientpp::Utility::Archive ac({"1", "2"});
+  DockerClientpp::Utility::Archive ac;
+  ac.addFiles({"1", "2"});
   ac.writeToFd(fd);
 
   close(fd);
@@ -28,6 +28,5 @@ TEST(ArchiveTest, CompressTest) {
   std::remove("1");
   std::remove("2");
 
-  //DockerClientpp::Socket s(DockerClientpp::UNIX, "/var/run/docker.sock");
-
+  // DockerClientpp::Socket s(DockerClientpp::UNIX, "/var/run/docker.sock");
 }

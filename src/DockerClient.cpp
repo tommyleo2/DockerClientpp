@@ -18,6 +18,8 @@ class DockerClient::Impl {
   string inspectExecution(const string &id);
   void putFiles(const string &identifier, const vector<string> &files,
                 const string &path);
+  void getFile(const string &identifier, const string &file,
+               const string &path);
 
  private:
   Http::Header createCommonHeader(size_t content_length);
@@ -162,9 +164,9 @@ string DockerClient::Impl::inspectExecution(const string &id) {
 void DockerClient::Impl::putFiles(const string &identifier,
                                   const vector<string> &files,
                                   const string &path) {
-  Utility::Archive ar(files);
-  string put_data;
-  ar.getTar(put_data);
+  Utility::Archive ar;
+  ar.addFiles(files);
+  string put_data = ar.getTar(false);
   Header header = createCommonHeader(put_data.size());
 
   header["Content-Type"] = "application/x-tar";
@@ -178,6 +180,24 @@ void DockerClient::Impl::putFiles(const string &identifier,
       json body = json::parse(res->body);
       throw Exception(body["message"].get<string>());
   }
+}
+
+void DockerClient::Impl::getFile(const string &identifier, const string &file,
+                                 const string &path) {
+  throw NotImplementError("ge file from container is not implemented yet");
+  // Header header = createCommonHeader(0);
+  // shared_ptr<Response> res =
+  //   http_client.Get("/containers/" + id + "/archive", header, {{"path",
+  //   file}});
+  // switch (res->status_code) {
+  // case 200:
+  //   break;
+  // default:
+  //   json body = json::parse(res->body);
+  //   throw Exception(body["message"].get<string>());
+  // }
+
+  // return res->body;
 }
 
 //-------------------------DockerClient Implementation-------------------------
@@ -223,4 +243,9 @@ string DockerClient::inspectExecution(const string &id) {
 void DockerClient::putFiles(const string &identifier,
                             const vector<string> &files, const string &path) {
   m_impl->putFiles(identifier, files, path);
+}
+
+void DockerClient::getFile(const string &identifier, const string &file,
+                           const string &path) {
+  m_impl->getFile(identifier, file, path);
 }

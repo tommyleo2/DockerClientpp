@@ -7,12 +7,12 @@ namespace DockerClientpp {
 namespace Utility {
 class Archive {
  public:
-  Archive(const vector<string> &files, bool reserve_path = false);
+  Archive();
   ~Archive();
   void addFile(const string &file);
-  void addFile(const vector<string> &files);
-  void writeToFd(const int fd);
-  void getTar(string &buffer);
+  void addFiles(const vector<string> &files);
+  void writeToFd(const int fd, bool reserve_path = false);
+  string getTar(bool reserve_path = false);
 
  private:
   class Impl;

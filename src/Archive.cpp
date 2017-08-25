@@ -6,40 +6,39 @@
 #include <fcntl.h>
 
 namespace DockerClientpp {
-  namespace Utility {
-    class Archive::Impl {
-    public:
-      Impl(const vector<string> &files, bool reserve_path = false);
-      ~Impl();
-      void addFile(const string &file);
-      void addFile(const vector<string> &files);
-      void writeToFd(const int fd);
-      void getTar(string &buffer);
-    private:
-      static la_ssize_t writeToBuffer(archive *a, void *client_data,
-                                      const void *buff, size_t n);
+namespace Utility {
+class Archive::Impl {
+ public:
+  Impl();
+  ~Impl();
+  void addFile(const string &file);
+  void addFiles(const vector<string> &files);
+  void writeToFd(const int fd, bool reserve_path);
+  string getTar(bool reserve_path);
 
-      vector<string> m_files;
-      bool reserve_path;
-    };
-  }
+ private:
+  static la_ssize_t writeToBuffer(archive *a, void *client_data,
+                                  const void *buff, size_t n);
+
+  vector<string> m_files;
+};
+}
 }
 
 using namespace DockerClientpp::Utility;
 
-Archive::Impl::Impl(const vector<string> &files, bool reserve_path) :
-  m_files(files), reserve_path(reserve_path) { }
+Archive::Impl::Impl() {}
 
-Archive::Impl::~Impl() { }
+Archive::Impl::~Impl() {}
 
 void Archive::Impl::addFile(const string &file) {
   m_files.push_back(file);
 }
-void Archive::Impl::addFile(const vector<string> &files) {
+void Archive::Impl::addFiles(const vector<string> &files) {
   m_files.insert(m_files.end(), files.begin(), files.end());
 }
 
-void Archive::Impl::writeToFd(const int fd) {
+void Archive::Impl::writeToFd(const int fd, bool reserve_path) {
   archive *a;
   archive_entry *entry;
   struct stat st;
@@ -81,12 +80,13 @@ void Archive::Impl::writeToFd(const int fd) {
   archive_write_free(a);
 }
 
-void Archive::Impl::getTar(string &buffer) {
+DockerClientpp::string Archive::Impl::getTar(bool reserve_path) {
   archive *a;
   archive_entry *entry;
   struct stat st;
   char buff[8192];
   int len;
+  string buffer;
 
   a = archive_write_new();
 
@@ -121,6 +121,7 @@ void Archive::Impl::getTar(string &buffer) {
     archive_entry_free(entry);
   }
   archive_write_free(a);
+  return buffer;
 }
 
 la_ssize_t Archive::Impl::writeToBuffer(archive *, void *client_data,
@@ -131,26 +132,24 @@ la_ssize_t Archive::Impl::writeToBuffer(archive *, void *client_data,
   return n;
 }
 
-
 //-------------------------Archive Implementation-------------------------//
 
-Archive::Archive(const vector<string> &files, bool reserve_path) :
-  m_impl(new Impl(files, reserve_path)) { }
+Archive::Archive() : m_impl(new Impl()) {}
 
-Archive::~Archive() { }
+Archive::~Archive() {}
 
-void Archive::writeToFd(const int fd) {
-  m_impl->writeToFd(fd);
+void Archive::writeToFd(const int fd, bool reserve_path) {
+  m_impl->writeToFd(fd, reserve_path);
 }
 
-void Archive::getTar(string &buffer) {
-  m_impl->getTar(buffer);
+DockerClientpp::string Archive::getTar(bool reserve_path) {
+  return m_impl->getTar(reserve_path);
 }
 
 void Archive::addFile(const string &file) {
   m_impl->addFile(file);
 }
 
-void Archive::addFile(const vector<string> &files) {
-  m_impl->addFile(files);
+void Archive::addFiles(const vector<string> &files) {
+  m_impl->addFiles(files);
 }

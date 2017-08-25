@@ -140,6 +140,16 @@ class DockerClient {
   void putFiles(const string &identifier, const vector<string> &files,
                 const string &path);
 
+  /**
+   * @brief Get file to container
+   *
+   * @param identifier container's id or name
+   * @param file file in the container
+   * @param path location that the file to be stored in
+   */
+  void getFile(const string &identifier, const string &file,
+               const string &path);
+
  private:
   class Impl;
   unique_ptr<Impl> m_impl;
