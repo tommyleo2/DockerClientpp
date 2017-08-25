@@ -6,7 +6,7 @@
 
 namespace DockerClientpp {
 /**
- *  @brief Docker row stream chunk
+ * @brief Docker row stream chunk
  */
 struct Chunk {
   int type;          ///<  Type 0:stdin, 1:stdout, 2:stderr

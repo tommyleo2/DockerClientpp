@@ -2,19 +2,18 @@
 #define RESPONSE_H
 
 #include "Chunk.hpp"
-#include "types.hpp"
-
+#include "defines.hpp"
 namespace DockerClientpp {
 namespace Http {
 /**
- *  @brief Http response class
+ * @brief Http response class
  */
 struct Response {
   // Response(Response &&) = default;
   Uri uri;                ///<  Uri of the request
   int status_code = 400;  ///<  Status code of the response
   Header header;          ///<  Header of the the response
-  std::string body;       ///<  Body of the response
+  string body;            ///<  Body of the response
 };
 }
 }

@@ -8,7 +8,7 @@ using std::string;
 
 namespace DockerClientpp {
 /**
- *  @brief Base class for all DockerClientpp exceptions
+ * @brief Base class for all DockerClientpp exceptions
  */
 class Exception : public std::exception {
  public:

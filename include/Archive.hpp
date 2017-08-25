@@ -1,14 +1,10 @@
 #ifndef ARCHIVE_H
 #define ARCHIVE_H
 
-#include <memory>
-#include <string>
-#include <vector>
+#include "defines.hpp"
 
 namespace DockerClientpp {
 namespace Utility {
-using std::vector;
-using std::string;
 class Archive {
  public:
   Archive(const vector<string> &files, bool reserve_path = false);
@@ -20,7 +16,7 @@ class Archive {
 
  private:
   class Impl;
-  std::unique_ptr<Impl> m_impl;
+  unique_ptr<Impl> m_impl;
 };
 }
 }

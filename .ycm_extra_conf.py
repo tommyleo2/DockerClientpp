@@ -62,6 +62,12 @@ flags = [
   '.',
   '-I',
   './include',
+  '-I',
+  './ext/googletest/googletest/include',
+  '-I',
+  './ext/googletest/googlemock/include',
+  '-I',
+  './ext/libarchive/libarchive'
 ]
 
 

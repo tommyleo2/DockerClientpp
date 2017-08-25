@@ -4,35 +4,33 @@
 #include "Exceptions.hpp"
 #include "Response.hpp"
 #include "Utility.hpp"
-#include "types.hpp"
+#include "defines.hpp"
 
 #include <algorithm>
 
 namespace DockerClientpp {
 namespace Http {
 /**
- *  @brief Simple http client
+ * @brief Simple http client
  *
- *  Contains some basic http request methods, with limited implementation.
- *  Adapted to docker http request
+ * Contains some basic http request methods, with limited implementation.
+ * Adapted to docker http request
  *
  */
 class SimpleHttpClient {
  public:
-  SimpleHttpClient(const SOCK_TYPE type, const std::string &path);
+  SimpleHttpClient(const SOCK_TYPE type, const string &path);
   ~SimpleHttpClient();
-  std::shared_ptr<Response> Post(const Uri &uri, const Header &header,
-                                 const QueryParam &query_param,
-                                 const std::string &data);
-  std::shared_ptr<Response> Put(const Uri &uri, const Header &header,
-                                const QueryParam &query_param,
-                                const std::string &data);
-  std::shared_ptr<Response> Get(const Uri &uri, const Header &header,
-                                const QueryParam &query_param);
+  shared_ptr<Response> Post(const Uri &uri, const Header &header,
+                            const QueryParam &query_param, const string &data);
+  shared_ptr<Response> Put(const Uri &uri, const Header &header,
+                           const QueryParam &query_param, const string &data);
+  shared_ptr<Response> Get(const Uri &uri, const Header &header,
+                           const QueryParam &query_param);
 
  private:
   class Impl;
-  std::unique_ptr<Impl> m_impl;
+  unique_ptr<Impl> m_impl;
 };
 }
 }

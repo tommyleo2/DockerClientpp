@@ -3,7 +3,7 @@
 
 #include "Archive.hpp"
 #include "Exceptions.hpp"
-#include "types.hpp"
+#include "defines.hpp"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -17,21 +17,21 @@
 namespace DockerClientpp {
 class Socket {
  public:
-  Socket(const SOCK_TYPE type, const std::string &path);
+  Socket(const SOCK_TYPE type, const string &path);
   ~Socket();
   void connect();
   void read(char *buffer, size_t size);
-  std::string read(size_t size);
+  string read(size_t size);
   size_t readLine(char *buffer);
-  const std::string &readLine(std::string &buffer);
+  const string &readLine(string &buffer);
 
   void write(const char *content, size_t size);
-  void write(const std::string &content);
+  void write(const string &content);
   void write(Utility::Archive &archive);
 
  private:
   class Impl;
-  std::unique_ptr<Impl> m_impl;
+  unique_ptr<Impl> m_impl;
 };
 }
 
