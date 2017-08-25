@@ -15,10 +15,12 @@ class Archive::Impl {
   void addFiles(const vector<string> &files);
   void writeToFd(const int fd, bool reserve_path);
   string getTar(bool reserve_path);
+  static void extractTar(const string &tar_buffer, const string &path);
 
  private:
   static la_ssize_t writeToBuffer(archive *a, void *client_data,
                                   const void *buff, size_t n);
+  static int writeContentToDisk(archive *a, archive *disk);
 
   vector<string> m_files;
 };
@@ -132,6 +134,52 @@ la_ssize_t Archive::Impl::writeToBuffer(archive *, void *client_data,
   return n;
 }
 
+void Archive::Impl::extractTar(const string &tar_buffer, const string &path) {
+  archive *a;
+  archive *ext;
+  archive_entry *entry;
+  int flags = ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM |
+              ARCHIVE_EXTRACT_ACL | ARCHIVE_EXTRACT_FFLAGS;
+  int ret;
+  a = archive_read_new();
+  archive_read_support_format_all(a);
+  // archive_read_support_compression_all(a);
+  ext = archive_write_disk_new();
+  archive_write_disk_set_options(ext, flags);
+  archive_write_disk_set_standard_lookup(ext);
+
+  archive_read_open_memory(a, tar_buffer.c_str(), tar_buffer.size());
+  for (;;) {
+    ret = archive_read_next_header(a, &entry);
+    if (ret == ARCHIVE_EOF) break;
+    archive_entry_set_pathname(
+        entry, (path + "/" + archive_entry_pathname(entry)).c_str());
+    archive_write_header(ext, entry);
+    if (archive_entry_size(entry) > 0) {
+      writeContentToDisk(a, ext);
+    }
+    archive_write_finish_entry(ext);
+  }
+  archive_read_close(a);
+  archive_read_free(a);
+  archive_write_close(ext);
+  archive_write_free(ext);
+}
+
+int Archive::Impl::writeContentToDisk(archive *a, archive *disk) {
+  int ret;
+  const void *buff;
+  size_t size;
+  la_int64_t offset;
+  while (true) {
+    ret = archive_read_data_block(a, &buff, &size, &offset);
+    if (ret == ARCHIVE_EOF) {
+      return ARCHIVE_OK;
+    }
+    archive_write_data_block(disk, buff, size, offset);
+  }
+}
+
 //-------------------------Archive Implementation-------------------------//
 
 Archive::Archive() : m_impl(new Impl()) {}
@@ -152,4 +200,8 @@ void Archive::addFile(const string &file) {
 
 void Archive::addFiles(const vector<string> &files) {
   m_impl->addFiles(files);
+}
+
+void Archive::extractTar(const string &tar_buffer, const string &path) {
+  Impl::extractTar(tar_buffer, path);
 }

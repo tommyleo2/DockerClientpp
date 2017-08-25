@@ -13,6 +13,7 @@ class Archive {
   void addFiles(const vector<string> &files);
   void writeToFd(const int fd, bool reserve_path = false);
   string getTar(bool reserve_path = false);
+  static void extractTar(const string &tar_buffer, const string &path);
 
  private:
   class Impl;
