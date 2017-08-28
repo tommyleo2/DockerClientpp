@@ -28,6 +28,8 @@ if (ENABLE_TEST)
 
   file(GLOB DOCKER_CLIENT_PP_TEST_SRC_FILES test/*.cpp)
 
+  set(CMAKE_BUILD_TYPE Debug)
+
   add_executable(${PROJECT_NAME}Test
     ${DOCKER_CLIENT_PP_TEST_SRC_FILES}
     ${DOCKER_CLIENT_PP_SRC_FILES})
