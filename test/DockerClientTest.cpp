@@ -111,3 +111,15 @@ TEST(ExecTest, PutFileTest) {
   std::remove("2");
   std::remove("3");
 }
+
+TEST(ExecTest, GetFileTest) {
+  std::system("docker exec test sh -c 'echo 123 > 1'");
+  DockerClient dc;
+  dc.getFile("test", "/1", "./");
+  std::system("docker exec test rm 1");
+
+  std::fstream fs("1", std::fstream::in);
+  string content;
+  fs >> content;
+  EXPECT_EQ("123", content);
+}

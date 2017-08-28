@@ -1,10 +1,9 @@
 #ifndef DOCKERCLIENT_H
 #define DOCKERCLIENT_H
 
-#include "SimpleHttpClient.hpp"
-
 #include "Archive.hpp"
 #include "Response.hpp"
+#include "SimpleHttpClient.hpp"
 #include "defines.hpp"
 
 namespace DockerClientpp {

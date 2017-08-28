@@ -184,20 +184,18 @@ void DockerClient::Impl::putFiles(const string &identifier,
 
 void DockerClient::Impl::getFile(const string &identifier, const string &file,
                                  const string &path) {
-  throw NotImplementError("ge file from container is not implemented yet");
-  // Header header = createCommonHeader(0);
-  // shared_ptr<Response> res =
-  //   http_client.Get("/containers/" + id + "/archive", header, {{"path",
-  //   file}});
-  // switch (res->status_code) {
-  // case 200:
-  //   break;
-  // default:
-  //   json body = json::parse(res->body);
-  //   throw Exception(body["message"].get<string>());
-  // }
+  Header header = createCommonHeader(0);
+  shared_ptr<Response> res = http_client.Get(
+      "/containers/" + identifier + "/archive", header, {{"path", file}});
+  switch (res->status_code) {
+    case 200:
+      break;
+    default:
+      json body = json::parse(res->body);
+      throw Exception(body["message"].get<string>());
+  }
 
-  // return res->body;
+  Utility::Archive::extractTar(res->body, path);
 }
 
 //-------------------------DockerClient Implementation-------------------------

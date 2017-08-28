@@ -3,9 +3,9 @@
 class GlobalEnv : public ::testing::Environment {
  public:
   virtual void SetUp() {
-    if (std::system("docker pull busybox:1.26")) {
-      throw std::runtime_error("Cannot pull busybox");
-    }
+    // if (std::system("docker pull busybox:1.26")) {
+    //   throw std::runtime_error("Cannot pull busybox");
+    // }
     std::system("docker run -dt --name test busybox:1.26 > /dev/null 2>&1");
   }
   virtual void TearDown() {
