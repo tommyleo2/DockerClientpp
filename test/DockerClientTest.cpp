@@ -1,10 +1,8 @@
-#include "gtest/gtest.h"
-
-#include "DockerClient.hpp"
-
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
+
+#include "DockerClient.hpp"
+#include "gtest/gtest.h"
 
 using namespace DockerClientpp;
 

@@ -1,16 +1,14 @@
-#include <fstream>
-#include <streambuf>
-#include "gtest/gtest.h"
-
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fstream>
+#include <streambuf>
 
 #include "Archive.hpp"
-
 #include "Socket.hpp"
+#include "gtest/gtest.h"
 
-TEST(ArchiveTest, CompressTest) {
+TEST(ArchiveTest, GetTarTest) {
   std::fstream fs("1", std::fstream::out);
   fs << 1 << std::endl;
   fs.close();
@@ -18,15 +16,57 @@ TEST(ArchiveTest, CompressTest) {
   fs << 2 << std::endl;
   fs.close();
 
-  int fd = open("test.tar", O_TRUNC | O_WRONLY, 0644);
+  DockerClientpp::Utility::Archive ac;
+  ac.addFiles({"1", "2"});
+  std::fstream out_file("test.tar", std::fstream::out);
+  std::string tar = ac.getTar();
+  out_file << tar;
+
+  std::remove("1");
+  std::remove("2");
+
+  std::system("tar axf test.tar");
+  std::fstream test_1("./1");
+  std::string content;
+  test_1 >> content;
+  EXPECT_EQ("1", content);
+  std::fstream test_2("./2");
+  test_2 >> content;
+  EXPECT_EQ("2", content);
+
+  std::remove("1");
+  std::remove("2");
+  std::remove("test.tar");
+}
+
+TEST(ArchiveTest, WriteToFdTest) {
+  std::fstream fs("1", std::fstream::out);
+  fs << 1 << std::endl;
+  fs.close();
+  fs.open("2", std::fstream::out);
+  fs << 2 << std::endl;
+  fs.close();
 
   DockerClientpp::Utility::Archive ac;
   ac.addFiles({"1", "2"});
+  int fd = ::creat("test.tar", 0644);
   ac.writeToFd(fd);
 
-  close(fd);
   std::remove("1");
   std::remove("2");
+
+  std::system("tar axf test.tar");
+  std::fstream test_1("./1");
+  std::string content;
+  test_1 >> content;
+  EXPECT_EQ("1", content);
+  std::fstream test_2("./2");
+  test_2 >> content;
+  EXPECT_EQ("2", content);
+
+  std::remove("1");
+  std::remove("2");
+  std::remove("test.tar");
 }
 
 TEST(ArchiveTest, ExtractTest) {
