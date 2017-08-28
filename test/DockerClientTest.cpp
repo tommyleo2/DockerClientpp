@@ -41,10 +41,10 @@ TEST_F(LaunchTest, UnixSocketTest) {
   test(dc);
 }
 
-TEST_F(LaunchTest, TCPSocketTest) {
-  DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
-  test(dc);
-}
+// TEST_F(LaunchTest, TCPSocketTest) {
+//   DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
+//   test(dc);
+// }
 
 TEST(ExecTest, CreateExecTest) {
   DockerClient dc;  //(TCP, "127.0.0.1:8888");
@@ -58,7 +58,6 @@ TEST(ExecTest, CreateExecTest) {
     auto output = dc.startExecution(id, {{"Detach", false}, {"Tty", false}});
     EXPECT_EQ("1\n", output);
   }
-  // std::system("docker ps -a");
 }
 
 TEST(ExecTest, InspectTest) {

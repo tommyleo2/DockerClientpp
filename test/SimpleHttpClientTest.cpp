@@ -30,9 +30,9 @@ IOTest::IOTest()
              {"Accept", "*/*"}},
       query_param{{"all", "0"}} {}
 
-TEST_F(IOTest, TcpSocketTest) {
-  test(tcp_client);
-}
+// TEST_F(IOTest, TcpSocketTest) {
+//   test(tcp_client);
+// }
 
 TEST_F(IOTest, UnixSocketTest) {
   test(unix_client);
