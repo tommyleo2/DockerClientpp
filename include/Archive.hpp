@@ -1,27 +1,25 @@
 #ifndef ARCHIVE_H
 #define ARCHIVE_H
 
-#include <vector>
-#include <string>
-#include <memory>
+#include "defines.hpp"
 
 namespace DockerClientpp {
-  namespace Utility {
-    using std::vector;
-    using std::string;
-    class Archive {
-    public:
-      Archive(const vector<string> &files, bool reserve_path = false);
-      ~Archive();
-      void addFile(const string &file);
-      void addFile(const vector<string> &files);
-      void writeToFd(const int fd);
-      void getTar(string &buffer);
-    private:
-      class Impl;
-      std::unique_ptr<Impl> m_impl;
-    };
-  }
+namespace Utility {
+class Archive {
+ public:
+  Archive();
+  ~Archive();
+  void addFile(const string &file);
+  void addFiles(const vector<string> &files);
+  void writeToFd(const int fd, bool reserve_path = false);
+  string getTar(bool reserve_path = false);
+  static void extractTar(const string &tar_buffer, const string &path);
+
+ private:
+  class Impl;
+  unique_ptr<Impl> m_impl;
+};
+}
 }
 
 #endif /* ARCHIVE_H */

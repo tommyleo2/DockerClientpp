@@ -1,8 +1,7 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
-
-class GlobalEnv: public ::testing::Environment {
-public:
+class GlobalEnv : public ::testing::Environment {
+ public:
   virtual void SetUp() {
     // if (std::system("docker pull busybox:1.26")) {
     //   throw std::runtime_error("Cannot pull busybox");

@@ -1,0 +1,6 @@
+[submodule "ext/libarchive"]
+	path = ext/libarchive
+	url = https://github.com/libarchive/libarchive.git
+[submodule "ext/googletest"]
+	path = ext/googletest
+	url = https://github.com/google/googletest.git
