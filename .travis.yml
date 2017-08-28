@@ -1,0 +1,25 @@
+language: cpp
+
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+
+services:
+  - docker
+
+install:
+  - sudo rm /usr/bin/g++
+  - sudo ln -s /usr/bin/g++-5 /usr/bin/g++
+  - mkdir build
+  - cd build
+  - cmake .. -DENABLE_TEST=ON
+  - make
+
+script:
+  - ./DockerClientppTest
