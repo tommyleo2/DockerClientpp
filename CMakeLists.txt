@@ -1,6 +1,8 @@
 project(DockerClientpp)
 cmake_minimum_required(VERSION 2.6)
 
+option(CI_TEST "indicates CI environment" OFF)
+
 include_directories("include")
 include_directories("ext/libarchive/libarchive")
 
@@ -29,6 +31,10 @@ if (ENABLE_TEST)
   file(GLOB DOCKER_CLIENT_PP_TEST_SRC_FILES test/*.cpp)
 
   set(CMAKE_BUILD_TYPE Debug)
+
+  if (CI_TEST)
+    add_definitions(-DCI_TEST)
+  endif ()
 
   add_executable(${PROJECT_NAME}Test
     ${DOCKER_CLIENT_PP_TEST_SRC_FILES}

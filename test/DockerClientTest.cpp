@@ -41,10 +41,14 @@ TEST_F(LaunchTest, UnixSocketTest) {
   test(dc);
 }
 
-// TEST_F(LaunchTest, TCPSocketTest) {
-//   DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
-//   test(dc);
-// }
+#ifndef CI_TEST
+
+TEST_F(LaunchTest, TCPSocketTest) {
+  DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
+  test(dc);
+}
+
+#endif
 
 TEST(ExecTest, CreateExecTest) {
   DockerClient dc;  //(TCP, "127.0.0.1:8888");
