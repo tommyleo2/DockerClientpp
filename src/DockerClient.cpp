@@ -16,6 +16,7 @@ class DockerClient::Impl {
   string createExecution(const string &identifier, const json &config);
   string startExecution(const string &id, const json &config);
   string inspectExecution(const string &id);
+  ExecRet executeCommand(const string &identifier, const vector<string> &cmd);
   void putFiles(const string &identifier, const vector<string> &files,
                 const string &path);
   void getFile(const string &identifier, const string &file,
@@ -161,6 +162,19 @@ string DockerClient::Impl::inspectExecution(const string &id) {
   return res->body;
 }
 
+ExecRet DockerClient::Impl::executeCommand(const string &identifier,
+                                           const vector<string> &cmd) {
+  string id = this->createExecution(identifier, {{"AttachStdout", true},
+                                                 {"AttachStderr", true},
+                                                 {"Tty", false},
+                                                 {"Cmd", cmd}});
+  ExecRet ret;
+  ret.output = this->startExecution(id, {{"Detach", false}, {"Tty", false}});
+  json status = json::parse(this->inspectExecution(id));
+  ret.ret_code = status["ExitCode"].get<int>();
+  return ret;
+}
+
 void DockerClient::Impl::putFiles(const string &identifier,
                                   const vector<string> &files,
                                   const string &path) {
@@ -236,6 +250,11 @@ string DockerClient::startExecution(const string &id, const json &config) {
 
 string DockerClient::inspectExecution(const string &id) {
   return m_impl->inspectExecution(id);
+}
+
+ExecRet DockerClient::executeCommand(const string &identifier,
+                                     const vector<string> &cmd) {
+  return m_impl->executeCommand(identifier, cmd);
 }
 
 void DockerClient::putFiles(const string &identifier,
