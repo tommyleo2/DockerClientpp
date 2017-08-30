@@ -77,6 +77,13 @@ TEST(ExecTest, InspectTest) {
   EXPECT_EQ(0, status["ExitCode"].get<int>());
 }
 
+TEST(ExecTest, ExecCommandTest) {
+  DockerClient dc;
+  ExecRet ret = dc.executeCommand("test", {"echo", "1"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("1\n", ret.output);
+}
+
 TEST(ExecTest, PutFileTest) {
   DockerClient dc;  //(TCP, "127.0.0.1:8888");
   string id;

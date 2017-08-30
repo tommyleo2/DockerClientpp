@@ -1,8 +1,8 @@
 #ifndef RESPONSE_H
 #define RESPONSE_H
 
-#include "Chunk.hpp"
 #include "defines.hpp"
+
 namespace DockerClientpp {
 namespace Http {
 /**

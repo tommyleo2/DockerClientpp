@@ -126,8 +126,7 @@ class DockerClient {
    * @return
    * @sa createContainer()
    */
-  // template <typename... Ts>
-  // string executeCommand(const string &identifier, Ts &&... ts) {}
+  ExecRet executeCommand(const string &identifier, const vector<string> &cmd);
 
   /**
    * @brief Put files to container
