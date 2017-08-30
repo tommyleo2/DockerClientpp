@@ -9,9 +9,32 @@ class Archive {
  public:
   Archive();
   ~Archive();
+  /**
+   * @brief Add a file to the archive
+   * @param file file path to the added file
+   */
   void addFile(const string &file);
+
+  /**
+   * @brief Add files to the archive
+   * @param files files path to the added files
+   */
   void addFiles(const vector<string> &files);
+
+  /**
+   * @brief Write the archive binary to a file
+   * @param fd archive file's file descriptor
+   * @param reserve_path reserve file's path in archive. If false, all files
+   *        will be set to root directory in the archive
+   */
   void writeToFd(const int fd, bool reserve_path = false);
+
+  /**
+   * @brief Get archive binary string
+   * @param reserve_path reserve file's path in archive. If false, all files
+   *        will be set to root directory in the archive
+   * @return raw string of the archive
+   */
   string getTar(bool reserve_path = false);
   static void extractTar(const string &tar_buffer, const string &path);
 

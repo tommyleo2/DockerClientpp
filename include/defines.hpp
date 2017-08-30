@@ -42,11 +42,6 @@ using std::vector;
 using std::shared_ptr;
 using std::unique_ptr;
 
-struct ExecRet {
-  int ret_code;
-  string output;
-};
-
 namespace Http {
 typedef std::string Uri;
 typedef json Header;

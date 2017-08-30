@@ -2,6 +2,7 @@
 #define DOCKERCLIENT_H
 
 #include "Archive.hpp"
+#include "ExecRet.hpp"
 #include "Response.hpp"
 #include "SimpleHttpClient.hpp"
 #include "defines.hpp"
