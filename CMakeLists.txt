@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 2.6)
 
 option(CI_TEST "indicates CI environment" OFF)
 
-include_directories("include")
-include_directories("ext/libarchive/libarchive")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive/libarchive")
 
 file(GLOB DOCKER_CLIENT_PP_SRC_FILES src/*.cpp)
 
 find_package(Threads REQUIRED)
-add_subdirectory("ext/libarchive")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive")
 
 set(DOCKER_CLIENT_PP_LIB_TARGET DockerClientpp)
 
@@ -24,9 +24,9 @@ target_link_libraries(${DOCKER_CLIENT_PP_LIB_TARGET}
 if (ENABLE_TEST)
   enable_testing()
 
-  include_directories("ext/googletest/googletest/include")
-  include_directories("ext/googletest/googlemock/include")
-  add_subdirectory("ext/googletest")
+  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest/googletest/include")
+  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest/googlemock/include")
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
 
   file(GLOB DOCKER_CLIENT_PP_TEST_SRC_FILES test/*.cpp)
 
@@ -54,8 +54,8 @@ endif()
 
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
-  configure_file("Doxyfile.in"
-    "Doxyfile" @ONLY)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in"
+    "${CMAKE_BINARY_DIR}/Doxyfile" @ONLY)
   add_custom_target(doc
     COMMAND ${DOXYGEN_EXECUTABLE} "Doxyfile"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
