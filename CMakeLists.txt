@@ -51,3 +51,16 @@ if (ENABLE_TEST)
 
   add_test(DockerClientppTest ${PROJECT_NAME}Test)
 endif()
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+  configure_file("Doxyfile.in"
+    "Doxyfile" @ONLY)
+  add_custom_target(doc
+    COMMAND ${DOXYGEN_EXECUTABLE} "Doxyfile"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Generates API docs with doxygen"
+    VERBATIM)
+else ()
+  message("Doxygen executable not found")
+endif ()
