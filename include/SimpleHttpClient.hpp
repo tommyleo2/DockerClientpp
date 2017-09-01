@@ -27,6 +27,8 @@ class SimpleHttpClient {
                            const QueryParam &query_param, const string &data);
   shared_ptr<Response> Get(const Uri &uri, const Header &header,
                            const QueryParam &query_param);
+  shared_ptr<Response> Delete(const Uri &uri, const Header &header,
+                              const QueryParam &query_param);
 
  private:
   class Impl;

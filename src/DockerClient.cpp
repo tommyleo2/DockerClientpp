@@ -12,7 +12,9 @@ class DockerClient::Impl {
   string listImages();
   string createContainer(const json &config, const string &name = "");
   void startContainer(const string &identifier);
-  void stopContainer(const std::string &identifier);
+  void stopContainer(const string &identifier);
+  void removeContainer(const string &identifier, bool remove_volume, bool force,
+                       bool remove_link);
   string createExecution(const string &identifier, const json &config);
   string startExecution(const string &id, const json &config);
   string inspectExecution(const string &id);
@@ -111,6 +113,26 @@ void DockerClient::Impl::stopContainer(const string &identifier) {
   Header header = createCommonHeader(0);
   Uri uri = "/containers/" + identifier + "/stop";
   shared_ptr<Response> res = http_client.Post(uri, header, {}, "");
+  switch (res->status_code) {
+    case 204:
+      break;
+    default: {
+      json body = json::parse(res->body);
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
+    }
+  }
+}
+
+void DockerClient::Impl::removeContainer(const string &identifier,
+                                         bool remove_volume, bool force,
+                                         bool remove_link) {
+  Header header = createCommonHeader(0);
+  Uri uri = "/containers/" + identifier;
+  QueryParam query_param{{"v", std::to_string(remove_volume)},
+                         {"force", std::to_string(force)},
+                         {"link", std::to_string(remove_link)}};
+  shared_ptr<Response> res = http_client.Delete(uri, header, query_param);
   switch (res->status_code) {
     case 204:
       break;
@@ -248,6 +270,11 @@ void DockerClient::startContainer(const string &identifier) {
 
 void DockerClient::stopContainer(const string &identifier) {
   m_impl->stopContainer(identifier);
+}
+
+void DockerClient::removeContainer(const string &identifier, bool remove_volume,
+                                   bool force, bool remove_link) {
+  m_impl->removeContainer(identifier, remove_volume, force, remove_link);
 }
 
 string DockerClient::createExecution(const string &identifier,

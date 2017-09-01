@@ -34,7 +34,7 @@ int main() {
                               {"Tty", false},
                               {"Cmd", json::array({"cat", "/tmp/testfile"})}});
 
-  string output = dc.startExecution(exec_id, {});
+  string output = dc.startExecution(exec_id);
   cout << output;
   std::remove("testfile");
 
@@ -48,6 +48,8 @@ int main() {
   std::remove("test_file");
 
   dc.stopContainer(id);
+
+  dc.removeContainer(id);
 
   return 0;
 }
