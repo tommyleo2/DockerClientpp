@@ -1,7 +1,7 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 using std::string;
@@ -10,17 +10,18 @@ namespace DockerClientpp {
 /**
  * @brief Base class for all DockerClientpp exceptions
  */
-class Exception : public std::exception {
+class Exception : public std::runtime_error {
  public:
-  explicit Exception(const string &what) : m_what(what) {}
-  explicit Exception(const char *what = "") : m_what(what) {}
-  Exception(const Exception &e) : std::exception(e), m_what(e.m_what) {}
-  virtual const char *what() const throw() override {
-    return m_what.c_str();
-  }
+  explicit Exception(const string &what = "") : runtime_error(what) {}
+  Exception(const Exception &e) = default;
+};
 
- protected:
-  string m_what;
+class DockerOperationError : public Exception {
+ public:
+  DockerOperationError(const string &uri, int status_code, const string &what)
+      : Exception(what), uri(uri), status_code(status_code) {}
+  string uri;
+  int status_code;
 };
 
 class ServerError : public Exception {

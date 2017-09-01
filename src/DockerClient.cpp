@@ -45,14 +45,16 @@ void DockerClient::Impl::setAPIVersion(const string &api) {
 
 string DockerClient::Impl::listImages() {
   Header header = createCommonHeader(0);
-  shared_ptr<Response> res = http_client.Get("/images/json", header, {});
+  Uri uri = "/images/json";
+  shared_ptr<Response> res = http_client.Get(uri, header, {});
   switch (res->status_code) {
     case 200: {
       break;
     }
     default:
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
       break;
   }
   return res->body;
@@ -76,42 +78,46 @@ string DockerClient::Impl::createContainer(const json &config,
 
   string post_data = config.dump();
   Header header = createCommonHeader(post_data.size());
+  Uri uri = "/containers/create";
   shared_ptr<Response> res =
-      http_client.Post("/containers/create", header, query_param, post_data);
+      http_client.Post(uri, header, query_param, post_data);
   json body = json::parse(res->body);
   switch (res->status_code) {
     case 201:
       break;
     default:
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
   return body["Id"];
 }
 
 void DockerClient::Impl::startContainer(const string &identifier) {
   Header header = createCommonHeader(0);
-  shared_ptr<Response> res =
-      http_client.Post("/containers/" + identifier + "/start", header, {}, "");
+  Uri uri = "/containers/" + identifier + "/start";
+  shared_ptr<Response> res = http_client.Post(uri, header, {}, "");
   switch (res->status_code) {
     case 204:
       break;
     default: {
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
     }
   }
 }
 
 void DockerClient::Impl::stopContainer(const string &identifier) {
   Header header = createCommonHeader(0);
-  shared_ptr<Response> res =
-      http_client.Post("/containers/" + identifier + "/stop", header, {}, "");
+  Uri uri = "/containers/" + identifier + "/stop";
+  shared_ptr<Response> res = http_client.Post(uri, header, {}, "");
   switch (res->status_code) {
     case 204:
       break;
     default: {
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
     }
   }
 }
@@ -120,14 +126,15 @@ string DockerClient::Impl::createExecution(const string &identifier,
                                            const json &config) {
   string post_data = config.dump();
   Header header = createCommonHeader(post_data.size());
-  shared_ptr<Response> res = http_client.Post(
-      "/containers/" + identifier + "/exec", header, {}, post_data);
+  Uri uri = "/containers/" + identifier + "/exec";
+  shared_ptr<Response> res = http_client.Post(uri, header, {}, post_data);
   json body = json::parse(res->body);
   switch (res->status_code) {
     case 201:
       break;
     default:
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
   return body["Id"];
 }
@@ -136,28 +143,30 @@ string DockerClient::Impl::startExecution(const string &id,
                                           const json &config) {
   string post_data = config.dump();
   Header header = createCommonHeader(post_data.size());
-  shared_ptr<Response> res =
-      http_client.Post("/exec/" + id + "/start", header, {}, post_data);
+  Uri uri = "/exec/" + id + "/start";
+  shared_ptr<Response> res = http_client.Post(uri, header, {}, post_data);
   switch (res->status_code) {
     case 200:
       break;
     default:
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
   return res->body;
 }
 
 string DockerClient::Impl::inspectExecution(const string &id) {
   Header header = createCommonHeader(0);
-  shared_ptr<Response> res =
-      http_client.Get("/exec/" + id + "/json", header, {});
+  Uri uri = "/exec/" + id + "/json";
+  shared_ptr<Response> res = http_client.Get(uri, header, {});
   switch (res->status_code) {
     case 200:
       break;
     default:
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
   return res->body;
 }
@@ -182,31 +191,33 @@ void DockerClient::Impl::putFiles(const string &identifier,
   ar.addFiles(files);
   string put_data = ar.getTar(false);
   Header header = createCommonHeader(put_data.size());
-
+  Uri uri = "/containers/" + identifier + "/archive";
   header["Content-Type"] = "application/x-tar";
   QueryParam query_param{{"path", path}};
-  shared_ptr<Response> res = http_client.Put(
-      "/containers/" + identifier + "/archive", header, query_param, put_data);
+  shared_ptr<Response> res =
+      http_client.Put(uri, header, query_param, put_data);
   switch (res->status_code) {
     case 200:
       break;
     default:
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
 }
 
 void DockerClient::Impl::getFile(const string &identifier, const string &file,
                                  const string &path) {
   Header header = createCommonHeader(0);
-  shared_ptr<Response> res = http_client.Get(
-      "/containers/" + identifier + "/archive", header, {{"path", file}});
+  Uri uri = "/containers/" + identifier + "/archive";
+  shared_ptr<Response> res = http_client.Get(uri, header, {{"path", file}});
   switch (res->status_code) {
     case 200:
       break;
     default:
       json body = json::parse(res->body);
-      throw Exception(body["message"].get<string>());
+      throw DockerOperationError(uri, res->status_code,
+                                 body["message"].get<string>());
   }
 
   Utility::Archive::extractTar(res->body, path);
