@@ -84,6 +84,16 @@ class DockerClient {
   void stopContainer(const string &identifier);
 
   /**
+   * @brief Remove a container
+   * @param identifier Container's ID or name
+   * @param remove_volume remove the mounted volume or not
+   * @param force force to remove a container, e.g. a running container
+   * @param remove_link remove the associated link
+   */
+  void removeContainer(const string &identifier, bool remove_volume = false,
+                       bool force = false, bool remove_link = false);
+
+  /**
    * @brief Set up an exec running instance in a running container
    *
    * The execution won't start until a start command is executed on it
@@ -106,7 +116,7 @@ class DockerClient {
    * @param config configuration
    * @return if Detach is false, return output
    */
-  string startExecution(const string &id, const json &config);
+  string startExecution(const string &id, const json &config = {});
 
   /**
    * @brief Inspect a execution instance

@@ -4,15 +4,17 @@
 #include "DockerClient.hpp"
 #include "gtest/gtest.h"
 
+// TODO: Exceptions tests
+
 using namespace DockerClientpp;
 
-class LaunchTest : public ::testing::Test {
+class ContainerTest : public ::testing::Test {
  protected:
   virtual void SetUp() override {
     std::system("docker rm -f test > /dev/null 2>&1");
   }
   virtual void TearDown() override {
-    std::system("docker start test > /dev/null 2>&1");
+    std::system("docker run -dt --name test busybox:1.26 > /dev/null 2>&1");
   }
   void test(DockerClient &dc) {
     string id;
@@ -33,17 +35,22 @@ class LaunchTest : public ::testing::Test {
     ASSERT_FALSE(std::system(("docker ps -q --no-trunc | grep " + id +
                               " > /dev/null 2>&1")
                                  .c_str()) == 0);
+
+    dc.removeContainer("test");
+    ASSERT_FALSE(std::system(("docker ps -aq --no-trunc | grep " + id +
+                              " > /dev/null 2>&1")
+                                 .c_str()) == 0);
   }
 };
 
-TEST_F(LaunchTest, UnixSocketTest) {
+TEST_F(ContainerTest, UnixSocketTest) {
   DockerClient dc(DockerClientpp::UNIX);
   test(dc);
 }
 
 #ifndef CI_TEST
 
-TEST_F(LaunchTest, TCPSocketTest) {
+TEST_F(ContainerTest, TCPSocketTest) {
   DockerClient dc(DockerClientpp::TCP, "127.0.0.1:8888");
   test(dc);
 }
