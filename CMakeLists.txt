@@ -1,24 +1,33 @@
 project(DockerClientpp)
 cmake_minimum_required(VERSION 2.6)
 
+option(ENABLE_TEST "enable testing" OFF)
 option(CI_TEST "indicates CI environment" OFF)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive/libarchive")
 
-file(GLOB DOCKER_CLIENT_PP_SRC_FILES src/*.cpp)
+file(GLOB DOCKER_CLIENT_PP_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB DOCKER_CLIENT_PP_INC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 find_package(Threads REQUIRED)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive")
 
-set(DOCKER_CLIENT_PP_LIB_TARGET DockerClientpp)
+set(DOCKER_CLIENT_PP_LIB DockerClientpp)
 
-add_library(${DOCKER_CLIENT_PP_LIB_TARGET} SHARED ${DOCKER_CLIENT_PP_SRC_FILES})
-set_target_properties(${DOCKER_CLIENT_PP_LIB_TARGET}
+add_library(${DOCKER_CLIENT_PP_LIB} STATIC ${DOCKER_CLIENT_PP_SRC_FILES})
+set_target_properties(${DOCKER_CLIENT_PP_LIB}
   PROPERTIES
   CXX_STANDARD 14)
-target_link_libraries(${DOCKER_CLIENT_PP_LIB_TARGET}
+target_link_libraries(${DOCKER_CLIENT_PP_LIB}
   archive)
+
+install(TARGETS ${DOCKER_CLIENT_PP_LIB}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
+
+install(FILES ${DOCKER_CLIENT_PP_INC_FILES}
+  DESTINATION include/dockerclientpp)
 
 
 if (ENABLE_TEST)
@@ -28,7 +37,7 @@ if (ENABLE_TEST)
   include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest/googlemock/include")
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/googletest")
 
-  file(GLOB DOCKER_CLIENT_PP_TEST_SRC_FILES test/*.cpp)
+  file(GLOB DOCKER_CLIENT_PP_TEST_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp")
 
   set(CMAKE_BUILD_TYPE Debug)
 
