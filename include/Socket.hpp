@@ -41,7 +41,7 @@ class Socket {
   /**
    * @brief Read a line from socket
    *
-   * Designed for reading http header, the line will not contain '\r' or '\n'
+   * Designed for reading http header, the line will not contain '\\r' or '\\n'
    * when return
    *
    * @param buffer buffer the data to be written into
@@ -52,7 +52,7 @@ class Socket {
   /**
    * @brief Read a line from socket
    *
-   * Designed for reading http header, the line will not contain '\r' or '\n'
+   * Designed for reading http header, the line will not contain '\\r' or '\\n'
    * when return
    *
    * @param buffer buffer the data to be written into
