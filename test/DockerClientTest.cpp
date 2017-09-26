@@ -139,4 +139,5 @@ TEST(ExecTest, GetFileTest) {
   string content;
   fs >> content;
   EXPECT_EQ("123", content);
+  std::remove("1");
 }
