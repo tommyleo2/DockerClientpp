@@ -61,7 +61,7 @@ flags = [
   '-I',
   '.',
   '-I',
-  './include',
+  './include/DockerClientpp',
   '-I',
   './ext/googletest/googletest/include',
   '-I',
