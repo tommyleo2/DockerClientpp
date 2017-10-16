@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 2.6)
 option(ENABLE_TEST "enable testing" OFF)
 option(CI_TEST "indicates CI environment" OFF)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/DockerClientpp")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive/libarchive")
 
 file(GLOB DOCKER_CLIENT_PP_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-file(GLOB DOCKER_CLIENT_PP_INC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+file(GLOB_RECURSE DOCKER_CLIENT_PP_INC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 find_package(Threads REQUIRED)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive")
