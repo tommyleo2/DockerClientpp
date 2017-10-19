@@ -1,5 +1,5 @@
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef DOCKER_CLIENT_PP_SOCKET_H
+#define DOCKER_CLIENT_PP_SOCKET_H
 
 #include "Archive.hpp"
 #include "Exceptions.hpp"
@@ -83,6 +83,6 @@ class Socket {
   class Impl;
   unique_ptr<Impl> m_impl;
 };
-}
+}  // namespace DockerClientpp
 
-#endif /* SOCKET_H */
+#endif /* DOCKER_CLIENT_PP_SOCKET_H */

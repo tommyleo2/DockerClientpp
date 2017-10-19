@@ -1,5 +1,5 @@
-#ifndef ARCHIVE_H
-#define ARCHIVE_H
+#ifndef DOCKER_CLIENT_PP_ARCHIVE_H
+#define DOCKER_CLIENT_PP_ARCHIVE_H
 
 #include "defines.hpp"
 
@@ -42,7 +42,7 @@ class Archive {
   class Impl;
   unique_ptr<Impl> m_impl;
 };
-}
-}
+}  // namespace Utility
+}  // namespace DockerClientpp
 
-#endif /* ARCHIVE_H */
+#endif /* DOCKER_CLIENT_PP_ARCHIVE_H */

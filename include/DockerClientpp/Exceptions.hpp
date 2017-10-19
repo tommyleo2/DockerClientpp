@@ -1,5 +1,5 @@
-#ifndef EXCEPTIONS_H
-#define EXCEPTIONS_H
+#ifndef DOCKER_CLIENT_PP_EXCEPTIONS_H
+#define DOCKER_CLIENT_PP_EXCEPTIONS_H
 
 #include <stdexcept>
 #include <string>
@@ -56,6 +56,6 @@ class ParseError : public Exception {
  public:
   explicit ParseError(const string &what) : Exception(what) {}
 };
-}
+}  // namespace DockerClientpp
 
-#endif /* EXCEPTIONS_H */
+#endif /* DOCKER_CLIENT_PP_EXCEPTIONS_H */

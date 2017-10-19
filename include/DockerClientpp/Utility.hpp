@@ -1,5 +1,5 @@
-#ifndef UTILITY_H
-#define UTILITY_H
+#ifndef DOCKER_CLIENT_PP_UTILITY_H
+#define DOCKER_CLIENT_PP_UTILITY_H
 
 #include "Exceptions.hpp"
 #include "Response.hpp"
@@ -35,7 +35,7 @@ Header loadHeader(const string &header_str);
  * @return Dumped header string
  */
 string dumpHeader(const Header &header);
-}
-}
+}  // namespace Utility
+}  // namespace DockerClientpp
 
-#endif /* UTILITY_H */
+#endif /* DOCKER_CLIENT_PP_UTILITY_H */

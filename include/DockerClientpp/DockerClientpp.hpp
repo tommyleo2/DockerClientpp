@@ -1,8 +1,8 @@
-#ifndef DOCKERCLIENTPP_H
-#define DOCKERCLIENTPP_H
+#ifndef DOCKER_CLIENT_PP_DOCKERCLIENTPP_H
+#define DOCKER_CLIENT_PP_DOCKERCLIENTPP_H
 
 #include "DockerClient.hpp"
 
 namespace DockerClientpp {}
 
-#endif /* DOCKERCLIENTPP_H */
+#endif /* DOCKER_CLIENT_PP_DOCKERCLIENTPP_H */
