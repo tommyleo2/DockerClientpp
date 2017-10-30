@@ -1,5 +1,5 @@
-#ifndef EXECRET_H
-#define EXECRET_H
+#ifndef DOCKER_CLIENT_PP_EXECRET_H
+#define DOCKER_CLIENT_PP_EXECRET_H
 
 #include "defines.hpp"
 
@@ -12,4 +12,4 @@ struct ExecRet {
 
 }  // namespace  DockerClientpp
 
-#endif /* EXECRET_H */
+#endif /* DOCKER_CLIENT_PP_EXECRET_H */

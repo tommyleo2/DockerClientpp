@@ -1,5 +1,5 @@
-#ifndef RESPONSE_H
-#define RESPONSE_H
+#ifndef DOCKER_CLIENT_PP_RESPONSE_H
+#define DOCKER_CLIENT_PP_RESPONSE_H
 
 #include "defines.hpp"
 
@@ -15,7 +15,7 @@ struct Response {
   Header header;          ///<  Header of the the response
   string body;            ///<  Body of the response
 };
-}
-}
+}  // namespace Http
+}  // namespace DockerClientpp
 
-#endif /* RESPONSE_H */
+#endif /* DOCKER_CLIENT_PP_RESPONSE_H */

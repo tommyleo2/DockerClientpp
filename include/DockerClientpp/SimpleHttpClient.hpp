@@ -1,5 +1,5 @@
-#ifndef SIMPLEHTTPCLIENT_H
-#define SIMPLEHTTPCLIENT_H
+#ifndef DOCKER_CLIENT_PP_SIMPLEHTTPCLIENT_H
+#define DOCKER_CLIENT_PP_SIMPLEHTTPCLIENT_H
 
 #include "Exceptions.hpp"
 #include "Response.hpp"
@@ -34,7 +34,7 @@ class SimpleHttpClient {
   class Impl;
   unique_ptr<Impl> m_impl;
 };
-}
-}
+}  // namespace Http
+}  // namespace DockerClientpp
 
-#endif /* SIMPLEHTTPCLIENT_H */
+#endif /* DOCKER_CLIENT_PP_SIMPLEHTTPCLIENT_H */

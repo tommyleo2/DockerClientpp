@@ -1,5 +1,5 @@
-#ifndef DOCKERCLIENT_H
-#define DOCKERCLIENT_H
+#ifndef DOCKER_CLIENT_PP_DOCKERCLIENT_H
+#define DOCKER_CLIENT_PP_DOCKERCLIENT_H
 
 #include "Archive.hpp"
 #include "ExecRet.hpp"
@@ -163,6 +163,6 @@ class DockerClient {
   class Impl;
   unique_ptr<Impl> m_impl;
 };
-}
+}  // namespace DockerClientpp
 
-#endif /* DOCKERCLIENT_H */
+#endif /* DOCKER_CLIENT_PP_DOCKERCLIENT_H */

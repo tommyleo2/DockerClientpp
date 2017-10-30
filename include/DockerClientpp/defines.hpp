@@ -1,5 +1,5 @@
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef DOCKER_CLIENT_PP_DEFINES_H
+#define DOCKER_CLIENT_PP_DEFINES_H
 
 #include "json.hpp"
 
@@ -46,7 +46,7 @@ namespace Http {
 typedef std::string Uri;
 typedef json Header;
 typedef std::map<std::string, std::string> QueryParam;
-}
+}  // namespace Http
 }
 
-#endif /* DEFINES_H */
+#endif /* DOCKER_CLIENT_PP_DEFINES_H */
