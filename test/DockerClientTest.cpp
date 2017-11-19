@@ -129,6 +129,46 @@ TEST(ExecTest, PutFileTest) {
   std::remove("3");
 }
 
+TEST(ExecTest, PutDirectoryTest) {
+  DockerClient dc;  //(TCP, "127.0.0.1:8888");
+  string id = "test";
+  dc.executeCommand(id, {"sh", "-c", "rm -rf /tmp/*"});
+  std::system("mkdir test_directory");
+  std::fstream fs("test_directory/1", std::fstream::out);
+  fs << 1 << std::endl;
+  fs.close();
+  fs.open("test_directory/2", std::fstream::out);
+  fs << 2 << std::endl;
+  fs.close();
+  fs.open("test_directory/3", std::fstream::out);
+  fs << 3 << std::endl;
+  fs.close();
+
+  dc.putFiles("test", {"test_directory", "test_directory/1"}, "/tmp");
+
+  auto ret = dc.executeCommand(id, {"ls", "/tmp/test_directory"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("1\n2\n3\n", ret.output);
+
+  ret = dc.executeCommand(id, {"cat", "/tmp/test_directory/1"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("1\n", ret.output);
+
+  ret = dc.executeCommand(id, {"cat", "/tmp/test_directory/2"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("2\n", ret.output);
+
+  ret = dc.executeCommand(id, {"cat", "/tmp/test_directory/3"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("3\n", ret.output);
+
+  ret = dc.executeCommand(id, {"cat", "/tmp/1"});
+  EXPECT_EQ(0, ret.ret_code);
+  EXPECT_EQ("1\n", ret.output);
+
+  std::system("rm -r test_directory");
+}
+
 TEST(ExecTest, GetFileTest) {
   std::system("docker exec test sh -c 'echo 123 > 1'");
   DockerClient dc;

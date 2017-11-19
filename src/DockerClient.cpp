@@ -30,7 +30,7 @@ class DockerClient::Impl {
   Http::SimpleHttpClient http_client;
   string api_version;
 };
-}
+}  // namespace DockerClientpp
 
 using namespace DockerClientpp;
 using namespace Http;
@@ -211,7 +211,7 @@ void DockerClient::Impl::putFiles(const string &identifier,
                                   const string &path) {
   Utility::Archive ar;
   ar.addFiles(files);
-  string put_data = ar.getTar(false);
+  string put_data = ar.getTar();
   Header header = createCommonHeader(put_data.size());
   Uri uri = "/containers/" + identifier + "/archive";
   header["Content-Type"] = "application/x-tar";

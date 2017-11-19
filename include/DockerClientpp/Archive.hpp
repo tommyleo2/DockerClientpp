@@ -27,15 +27,13 @@ class Archive {
    * @param reserve_path reserve file's path in archive. If false, all files
    *        will be set to root directory in the archive
    */
-  void writeToFd(const int fd, bool reserve_path = false);
+  void writeToFd(const int fd);
 
   /**
    * @brief Get archive binary string
-   * @param reserve_path reserve file's path in archive. If false, all files
-   *        will be set to root directory in the archive
    * @return raw string of the archive
    */
-  string getTar(bool reserve_path = false);
+  string getTar();
   static void extractTar(const string &tar_buffer, const string &path);
 
  private:
