@@ -8,7 +8,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/DockerClientpp")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive/libarchive")
 
 file(GLOB DOCKER_CLIENT_PP_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-file(GLOB_RECURSE DOCKER_CLIENT_PP_INC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+file(GLOB_RECURSE DOCKER_CLIENT_PP_HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
 find_package(Threads REQUIRED)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive")
@@ -26,8 +26,8 @@ install(TARGETS ${DOCKER_CLIENT_PP_LIB}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
 
-install(FILES ${DOCKER_CLIENT_PP_INC_FILES}
-  DESTINATION include/dockerclientpp)
+install(FILES ${DOCKER_CLIENT_PP_HEADER_FILES}
+  DESTINATION "include/DockerClientpp")
 
 
 if (ENABLE_TEST)
