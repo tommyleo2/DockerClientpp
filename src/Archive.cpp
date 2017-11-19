@@ -3,6 +3,7 @@
 #include "archive.h"
 #include "archive_entry.h"
 
+#include <dirent.h>
 #include <fcntl.h>
 
 namespace DockerClientpp {
@@ -13,19 +14,21 @@ class Archive::Impl {
   ~Impl();
   void addFile(const string &file);
   void addFiles(const vector<string> &files);
-  void writeToFd(const int fd, bool reserve_path);
-  string getTar(bool reserve_path);
+  void writeToFd(const int fd);
+  string getTar();
   static void extractTar(const string &tar_buffer, const string &path);
 
  private:
+  void writeEntry(archive *a, const string &file_name, const string &file_path);
+
   static la_ssize_t writeToBuffer(archive *a, void *client_data,
                                   const void *buff, size_t n);
   static int writeContentToDisk(archive *a, archive *disk);
 
   vector<string> m_files;
 };
-}
-}
+}  // namespace Utility
+}  // namespace DockerClientpp
 
 using namespace DockerClientpp::Utility;
 
@@ -40,12 +43,8 @@ void Archive::Impl::addFiles(const vector<string> &files) {
   m_files.insert(m_files.end(), files.begin(), files.end());
 }
 
-void Archive::Impl::writeToFd(const int fd, bool reserve_path) {
+void Archive::Impl::writeToFd(const int fd) {
   archive *a;
-  archive_entry *entry;
-  struct stat st;
-  char buff[8192];
-  int len;
 
   a = archive_write_new();
 
@@ -53,41 +52,20 @@ void Archive::Impl::writeToFd(const int fd, bool reserve_path) {
 
   archive_write_open_fd(a, fd);
   for (const auto &file : m_files) {
-    stat(file.c_str(), &st);
-    entry = archive_entry_new();
-    archive_entry_copy_stat(entry, &st);
-    if (reserve_path) {
-      archive_entry_set_pathname(entry, file.c_str());
+    string file_name;
+    auto pos = file.find_last_of('/');
+    if (pos != std::string::npos) {
+      file_name = file.substr(pos + 1);
     } else {
-      auto pos = file.find_last_of('/');
-      if (pos != std::string::npos) {
-        string filename = file.substr(pos + 1);
-        archive_entry_set_pathname(entry, filename.c_str());
-      } else {
-        archive_entry_set_pathname(entry, file.c_str());
-      }
+      file_name = file;
     }
-    archive_write_header(a, entry);
-    int file_fd;
-    if ((file_fd = open(file.c_str(), O_RDONLY)) != -1) {
-      len = read(file_fd, buff, sizeof(buff));
-      while (len > 0) {
-        archive_write_data(a, buff, len);
-        len = read(file_fd, buff, sizeof(buff));
-      }
-      close(file_fd);
-    }
-    archive_entry_free(entry);
+    writeEntry(a, file_name, file);
   }
   archive_write_free(a);
 }
 
-DockerClientpp::string Archive::Impl::getTar(bool reserve_path) {
+DockerClientpp::string Archive::Impl::getTar() {
   archive *a;
-  archive_entry *entry;
-  struct stat st;
-  char buff[8192];
-  int len;
   string buffer;
 
   a = archive_write_new();
@@ -96,34 +74,55 @@ DockerClientpp::string Archive::Impl::getTar(bool reserve_path) {
 
   archive_write_open(a, &buffer, nullptr, writeToBuffer, nullptr);
   for (const auto &file : m_files) {
-    stat(file.c_str(), &st);
-    entry = archive_entry_new();
-    archive_entry_copy_stat(entry, &st);
-    if (reserve_path) {
-      archive_entry_set_pathname(entry, file.c_str());
+    string file_name;
+    auto pos = file.find_last_of('/');
+    if (pos != std::string::npos) {
+      file_name = file.substr(pos + 1);
     } else {
-      auto pos = file.find_last_of('/');
-      if (pos != std::string::npos) {
-        string filename = file.substr(pos + 1);
-        archive_entry_set_pathname(entry, filename.c_str());
-      } else {
-        archive_entry_set_pathname(entry, file.c_str());
-      }
+      file_name = file;
     }
-    archive_write_header(a, entry);
-    int file_fd;
-    if ((file_fd = open(file.c_str(), O_RDONLY)) != -1) {
-      len = read(file_fd, buff, sizeof(buff));
-      while (len > 0) {
-        archive_write_data(a, buff, len);
-        len = read(file_fd, buff, sizeof(buff));
-      }
-      close(file_fd);
-    }
-    archive_entry_free(entry);
+    writeEntry(a, file_name, file);
   }
   archive_write_free(a);
   return buffer;
+}
+
+void Archive::Impl::writeEntry(archive *a,
+                               const DockerClientpp::string &file_name,
+                               const DockerClientpp::string &file_path) {
+  struct stat st;
+  stat(file_path.c_str(), &st);
+
+  struct archive_entry *entry;
+  entry = archive_entry_new();
+  archive_entry_copy_stat(entry, &st);
+
+  archive_entry_set_pathname(entry, file_name.c_str());
+
+  archive_write_header(a, entry);
+  int file_fd;
+  char buff[8192];
+  if ((file_fd = open(file_path.c_str(), O_RDONLY)) != -1) {
+    int len = 0;
+    while ((len = read(file_fd, buff, sizeof(buff))) > 0) {
+      archive_write_data(a, buff, len);
+    }
+    close(file_fd);
+  }
+  archive_entry_free(entry);
+
+  if (S_ISDIR(st.st_mode)) {
+    DIR *dir;
+    dir = opendir(file_path.c_str());
+    struct dirent *entry;
+    while ((entry = readdir(dir))) {
+      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+        continue;
+      }
+      writeEntry(a, file_name + "/" + entry->d_name,
+                 file_path + "/" + entry->d_name);
+    }
+  }
 }
 
 la_ssize_t Archive::Impl::writeToBuffer(archive *, void *client_data,
@@ -186,12 +185,12 @@ Archive::Archive() : m_impl(new Impl()) {}
 
 Archive::~Archive() {}
 
-void Archive::writeToFd(const int fd, bool reserve_path) {
-  m_impl->writeToFd(fd, reserve_path);
+void Archive::writeToFd(const int fd) {
+  m_impl->writeToFd(fd);
 }
 
-DockerClientpp::string Archive::getTar(bool reserve_path) {
-  return m_impl->getTar(reserve_path);
+DockerClientpp::string Archive::getTar() {
+  return m_impl->getTar();
 }
 
 void Archive::addFile(const string &file) {
