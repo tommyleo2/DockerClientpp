@@ -39,6 +39,36 @@ TEST(ArchiveTest, GetTarTest) {
   std::remove("test.tar");
 }
 
+TEST(ArchiveTest, GetTarRecursiveTest) {
+  std::system("mkdir test_archive");
+  std::fstream fs("test_archive/1", std::fstream::out);
+  fs << 1 << std::endl;
+  fs.close();
+  fs.open("test_archive/2", std::fstream::out);
+  fs << 2 << std::endl;
+  fs.close();
+
+  DockerClientpp::Utility::Archive ac;
+  ac.addFile("test_archive");
+  std::fstream out_file("test.tar", std::fstream::out);
+  std::string tar = ac.getTar();
+  out_file << tar;
+
+  std::system("rm -r test_archive");
+
+  std::system("tar axf test.tar");
+  std::fstream test_1("test_archive/1");
+  std::string content;
+  test_1 >> content;
+  EXPECT_EQ("1", content);
+  std::fstream test_2("test_archive/2");
+  test_2 >> content;
+  EXPECT_EQ("2", content);
+
+  std::system("rm -r test_archive");
+  std::remove("test.tar");
+}
+
 TEST(ArchiveTest, WriteToFdTest) {
   std::fstream fs("1", std::fstream::out);
   fs << 1 << std::endl;
@@ -66,6 +96,35 @@ TEST(ArchiveTest, WriteToFdTest) {
 
   std::remove("1");
   std::remove("2");
+  std::remove("test.tar");
+}
+
+TEST(ArchiveTest, WriteToFdRecursiveTest) {
+  std::system("mkdir test_archive");
+  std::fstream fs("test_archive/1", std::fstream::out);
+  fs << 1 << std::endl;
+  fs.close();
+  fs.open("test_archive/2", std::fstream::out);
+  fs << 2 << std::endl;
+  fs.close();
+
+  DockerClientpp::Utility::Archive ac;
+  ac.addFile("test_archive");
+  int fd = ::creat("test.tar", 0644);
+  ac.writeToFd(fd);
+
+  std::system("rm -r test_archive");
+
+  std::system("tar axf test.tar");
+  std::fstream test_1("test_archive/1");
+  std::string content;
+  test_1 >> content;
+  EXPECT_EQ("1", content);
+  std::fstream test_2("test_archive/2");
+  test_2 >> content;
+  EXPECT_EQ("2", content);
+
+  std::system("rm -r test_archive");
   std::remove("test.tar");
 }
 
