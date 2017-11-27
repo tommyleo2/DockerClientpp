@@ -122,6 +122,7 @@ void Archive::Impl::writeEntry(archive *a,
       writeEntry(a, file_name + "/" + entry->d_name,
                  file_path + "/" + entry->d_name);
     }
+    closedir(dir);
   }
 }
 
