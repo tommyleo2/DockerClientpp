@@ -36,8 +36,8 @@ class SimpleHttpClient::Impl {
  private:
   Socket socket;
 };
-}
-}
+}  // namespace Http
+}  // namespace DockerClientpp
 
 using std::cout;
 using std::endl;
@@ -64,6 +64,7 @@ shared_ptr<Response> SimpleHttpClient::Impl::Post(const Uri &uri,
 
   shared_ptr<Response> response = sendAndRecieve(sent_data);
   response->uri = uri_with_query;
+  socket.close();
   return response;
 }
 
@@ -82,6 +83,7 @@ shared_ptr<Response> SimpleHttpClient::Impl::Put(const Uri &uri,
 
   shared_ptr<Response> response = sendAndRecieve(sent_data);
   response->uri = uri_with_query;
+  socket.close();
   return response;
 }
 
@@ -97,6 +99,7 @@ shared_ptr<Response> SimpleHttpClient::Impl::Get(
 
   shared_ptr<Response> response = sendAndRecieve(sent_data);
   response->uri = uri_with_query;
+  socket.close();
   return response;
 }
 
@@ -112,6 +115,7 @@ shared_ptr<Response> SimpleHttpClient::Impl::Delete(
 
   shared_ptr<Response> response = sendAndRecieve(sent_data);
   response->uri = uri_with_query;
+  socket.close();
   return response;
 }
 

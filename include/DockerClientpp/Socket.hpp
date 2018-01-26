@@ -19,10 +19,16 @@ class Socket {
  public:
   Socket(const SOCK_TYPE type, const string &path);
   ~Socket();
+
   /**
    * @brief Connect the socket
    */
   void connect();
+
+  /**
+   * @brief Connect the socket
+   */
+  void close();
 
   /**
    * @brief Read data from socket

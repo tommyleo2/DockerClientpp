@@ -3,23 +3,25 @@
 using std::string;
 
 namespace DockerClientpp {
-  class Socket::Impl {
-  public:
-    Impl(const SOCK_TYPE type, const string &path);
-    ~Impl();
-    void connect();
-    void read(char *buffer, size_t size);
-    size_t readLine(char *buffer);
-    const std::string &readLine(std::string &buffer);
+class Socket::Impl {
+ public:
+  Impl(const SOCK_TYPE type, const string &path);
+  ~Impl();
+  void connect();
+  void close();
+  void read(char *buffer, size_t size);
+  size_t readLine(char *buffer);
+  const std::string &readLine(std::string &buffer);
 
-    void write(const char *buffer, size_t size);
-    void write(Utility::Archive &archive);
-  private:
-    int fd;
-    int addr_length;
-    char addr[64];
-  };
-}
+  void write(const char *buffer, size_t size);
+  void write(Utility::Archive &archive);
+
+ private:
+  int fd;
+  int addr_length;
+  char addr[64];
+};
+}  // namespace DockerClientpp
 
 using namespace DockerClientpp;
 
@@ -30,15 +32,17 @@ Socket::Impl::Impl(const SOCK_TYPE type, const string &path) : fd(-1) {
     server_socket_addr.sun_family = AF_UNIX;
     strcpy(server_socket_addr.sun_path, path.c_str());
     addr_length = offsetof(sockaddr_un, sun_path) +
-      strlen(server_socket_addr.sun_path) + 1;
+                  strlen(server_socket_addr.sun_path) + 1;
     memcpy(&addr, &server_socket_addr, addr_length);
   } else if (type == TCP) {
     //  TODO: URL support
     sockaddr_in server_socket_addr;
 
     auto seperate_position = path.find(':');
-    server_socket_addr.sin_port = htons(std::stoi(path.substr(seperate_position + 1)));
-    server_socket_addr.sin_addr.s_addr = inet_addr(path.substr(0, seperate_position).c_str());
+    server_socket_addr.sin_port =
+        htons(std::stoi(path.substr(seperate_position + 1)));
+    server_socket_addr.sin_addr.s_addr =
+        inet_addr(path.substr(0, seperate_position).c_str());
     server_socket_addr.sin_family = AF_INET;
     addr_length = sizeof(server_socket_addr);
     memcpy(&addr, &server_socket_addr, addr_length);
@@ -55,19 +59,23 @@ Socket::Impl::Impl(const SOCK_TYPE type, const string &path) : fd(-1) {
 }
 
 Socket::Impl::~Impl() {
-  close(fd);
+  this->close();
 }
 
 void Socket::Impl::connect() {
-  close(fd);
+  // this->close();
   sockaddr *addr_ptr = reinterpret_cast<sockaddr *>(addr);
   if ((fd = socket(addr_ptr->sa_family, SOCK_STREAM, 0)) < 0) {
     throw SocketError(strerror(errno));
   }
   if (::connect(fd, addr_ptr, addr_length) < 0) {
-    close(fd);
+    this->close();
     throw SocketError(strerror(errno));
   }
+}
+
+void Socket::Impl::close() {
+  ::close(fd);
 }
 
 void Socket::Impl::read(char *buffer, size_t size) {
@@ -162,13 +170,17 @@ void Socket::Impl::write(Utility::Archive &archive) {
 
 //-------------------------Socket Implementation-------------------------//
 
-Socket::Socket(const SOCK_TYPE type, const std::string &path) :
-  m_impl(new Impl(type, path)) { }
+Socket::Socket(const SOCK_TYPE type, const std::string &path)
+    : m_impl(new Impl(type, path)) {}
 
-Socket::~Socket() { }
+Socket::~Socket() {}
 
 void Socket::connect() {
   m_impl->connect();
+}
+
+void Socket::close() {
+  m_impl->close();
 }
 
 void Socket::read(char *buffer, size_t size) {
