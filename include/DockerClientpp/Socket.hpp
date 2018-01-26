@@ -26,7 +26,7 @@ class Socket {
   void connect();
 
   /**
-   * @brief Connect the socket
+   * @brief Close the socket
    */
   void close();
 
