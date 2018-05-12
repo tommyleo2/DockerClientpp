@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.6)
 option(ENABLE_TEST "enable testing" OFF)
 option(CI_TEST "indicates CI environment" OFF)
 
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -O2")
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/DockerClientpp")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive/libarchive")
 
