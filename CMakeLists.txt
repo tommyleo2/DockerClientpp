@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 
 option(ENABLE_TEST "enable testing" OFF)
 option(CI_TEST "indicates CI environment" OFF)
+option(BUILD_SHARED_LIBS "build as a shared library" ON)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -O2")
 
@@ -17,12 +18,15 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/libarchive")
 
 set(DOCKER_CLIENT_PP_LIB DockerClientpp)
 
-add_library(${DOCKER_CLIENT_PP_LIB} STATIC ${DOCKER_CLIENT_PP_SRC_FILES})
+add_library(${DOCKER_CLIENT_PP_LIB} ${DOCKER_CLIENT_PP_SRC_FILES})
 set_target_properties(${DOCKER_CLIENT_PP_LIB}
   PROPERTIES
   CXX_STANDARD 14)
-target_link_libraries(${DOCKER_CLIENT_PP_LIB}
-  archive)
+if (BUILD_SHARED_LIBS)
+  target_link_libraries(${DOCKER_CLIENT_PP_LIB} archive)
+else ()
+  target_link_libraries(${DOCKER_CLIENT_PP_LIB} archive_static)
+endif ()
 
 install(TARGETS ${DOCKER_CLIENT_PP_LIB}
   LIBRARY DESTINATION lib
